@@ -8,3 +8,6 @@ dist/
 *.local
 *.tsbuildinfo
 output/qa/
+
+.vercel
+.env*
