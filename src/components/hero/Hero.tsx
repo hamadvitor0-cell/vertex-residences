@@ -82,6 +82,7 @@ export default function Hero({
           <span className="hero__edition">SÃO PAULO · EDIÇÃO 01</span>
         </div>
         <div className="hero__copy" key={chapter}>
+          {chapter > 0 && <h1 className="sr-only">VERTEX RESIDENCES — O próximo horizonte.</h1>}
           <span className="eyebrow hero__chapter-label">
             {
               [

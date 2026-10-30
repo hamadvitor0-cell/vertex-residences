@@ -26,3 +26,12 @@ Verificação visual em desktop, em 390 × 844 e em larguras de 320 e 768 px. Se
 - Fontes e quatro imagens servidas localmente. Galeria e seções posteriores utilizam imagens com lazy loading.
 
 Não foram feitos testes em dispositivos físicos nem uma auditoria completa de tecnologias assistivas. O formulário é uma demonstração e não transmite dados.
+
+## Publicação
+
+- Código publicado em `https://github.com/hamadvitor0-cell/vertex-residences`, com branch padrão `main`.
+- Deploy de produção concluído pela Vercel com estado `READY`.
+- URL pública: `https://vertex-residences.vercel.app`.
+- Respostas HTTP 200 verificadas sem autenticação na página inicial, apresentação, favicon e imagens do living e da fachada.
+- Repositório conectado à Vercel para atualizações automáticas.
+- Arquivos de ambiente e dados locais da Vercel ignorados pelo Git e pelo upload de deploy.

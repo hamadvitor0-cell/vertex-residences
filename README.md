@@ -2,6 +2,10 @@
 
 Experiência imobiliária cinematográfica e responsiva, criada para o portfólio da [Viham Dev](https://vitorhamad.me). Empreendimento fictício; todas as imagens, plantas, configurações e informações comerciais são conceituais.
 
+**[Abrir a experiência](https://vertex-residences.vercel.app)** · [Apresentação do empreendimento](https://vertex-residences.vercel.app/apresentacao.html) · [Validação](docs/VALIDATION.md)
+
+Publicado na Vercel, com o repositório GitHub conectado para deploys automáticos da branch `main`.
+
 ## Executar
 
 Requer Node.js 22.12+ (validado com Node 24).
