@@ -1,8 +1,10 @@
-import { lazy, Suspense, useCallback, useState } from 'react';
-import { ArrowDown, ArrowUpRight, MoveDown, Pause, Play } from 'lucide-react';
+import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { ArrowUpRight, MoveDown, Pause, Play } from 'lucide-react';
 import { chapters } from '../../data/project';
 import { useScrollTimeline } from '../../hooks/useScrollTimeline';
+import { activeTourStop, buildingProgress, tourStops } from '../../lib/apartmentTour.mjs';
 import SceneBoundary from '../ui/SceneBoundary';
+import TourNavigation from './TourNavigation';
 
 const BuildingScene = lazy(() => import('../scene/BuildingScene'));
 
@@ -34,19 +36,44 @@ export default function Hero({
   reduced,
   systemReduced,
   onToggleMotion,
-  onContact,
 }: {
   reduced: boolean;
   systemReduced: boolean;
   onToggleMotion: () => void;
-  onContact: () => void;
 }) {
   const { section, progressRef, progress, goTo } = useScrollTimeline(reduced);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [reducedRoom, setReducedRoom] = useState(-1);
+  const reducedProgress = useRef(chapters[2].progress);
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
-  const chapter = reduced ? 0 : progress < 0.21 ? 0 : progress < 0.52 ? 1 : progress < 0.89 ? 2 : 3;
+  const exterior = buildingProgress(progress);
+  const roomIndex = reduced ? reducedRoom : activeTourStop(progress);
+  const currentRoom = tourStops[roomIndex];
+  const chapter = currentRoom ? 3 : reduced || exterior < 0.21 ? 0 : exterior < 0.52 ? 1 : 2;
+  const selectRoom = (index: number) => {
+    const destination = tourStops[index]?.at ?? chapters[2].progress;
+    if (reduced) {
+      reducedProgress.current = destination;
+      setReducedRoom(index);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {
+      goTo(destination);
+    }
+  };
+  const toggleMotion = () => {
+    if (!reduced) {
+      reducedProgress.current = currentRoom?.at ?? chapters[2].progress;
+      setReducedRoom(roomIndex);
+    }
+    onToggleMotion();
+    // Wait for the hero's height to change before repositioning the viewport.
+    requestAnimationFrame(() => {
+      if (reduced && currentRoom) goTo(currentRoom.at);
+      else window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  };
   return (
     <section
       ref={section}
@@ -57,12 +84,12 @@ export default function Hero({
       <div className={`hero__sticky hero__sticky--chapter-${chapter}`}>
         <div className="hero__atmosphere" />
         <div className="hero__scene">
-          {(!ready || failed) && <ArchitecturalFallback progress={progress} reduced={reduced} />}
+          {(!ready || failed) && <ArchitecturalFallback progress={exterior} reduced={reduced} />}
           {!failed && (
             <SceneBoundary onError={onError}>
               <Suspense fallback={null}>
                 <BuildingScene
-                  progress={progressRef}
+                  progress={reduced ? reducedProgress : progressRef}
                   reduced={reduced}
                   onReady={onReady}
                   onError={onError}
@@ -72,95 +99,103 @@ export default function Hero({
           )}
         </div>
         <div className="hero__shade" />
-        <div className="hero__eyebrow">
-          <span className="status-dot" /> UMA NOVA PERSPECTIVA DE MORAR{' '}
-          <span className="hero__edition">SÃO PAULO · EDIÇÃO 01</span>
-        </div>
-        <div className="hero__copy" key={chapter}>
-          {chapter > 0 && <h1 className="sr-only">VERTEX RESIDENCES — O próximo horizonte.</h1>}
-          <span className="eyebrow hero__chapter-label">
-            {
-              [
-                'DO PRIMEIRO TRAÇO A UM NOVO HORIZONTE',
-                '01 / A INTENÇÃO GANHA FORMA',
-                '02 / A ARQUITETURA ENCONTRA A CIDADE',
-                '03 / BEM-VINDO AO SEU ESPAÇO',
-              ][chapter]
-            }
-          </span>
-          {chapter === 0 && (
-            <>
-              <h1>
-                O próximo
-                <br />
-                <em>horizonte.</em>
-              </h1>
-              <p>
-                Um novo ponto de vista.
-                <br />
-                Um novo jeito de pertencer.
-              </p>
-              <div className="hero__actions">
+        {chapter !== 3 && (
+          <div className="hero__eyebrow">
+            <span className="status-dot" /> UMA NOVA PERSPECTIVA DE MORAR{' '}
+            <span className="hero__edition">SÃO PAULO · EDIÇÃO 01</span>
+          </div>
+        )}
+        {currentRoom ? (
+          <div className="hero__copy hero__tour-copy" aria-live="polite" aria-atomic="true">
+            <h1 className="sr-only">VERTEX RESIDENCES — Visita ao apartamento</h1>
+            <div className="tour-room" key={currentRoom.name}>
+              <span className="eyebrow hero__chapter-label">
+                {failed ? 'ROTEIRO DO APARTAMENTO' : 'TOUR DO APARTAMENTO'} ·{' '}
+                {String(roomIndex + 1).padStart(2, '0')}/{String(tourStops.length).padStart(2, '0')}
+              </span>
+              <h2>{currentRoom.title}</h2>
+              <p className="tour-room__description">{currentRoom.description}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="hero__copy" key={chapter}>
+            {chapter > 0 && <h1 className="sr-only">VERTEX RESIDENCES — O próximo horizonte.</h1>}
+            <span className="eyebrow hero__chapter-label">
+              {
+                [
+                  'DO PRIMEIRO TRAÇO A UM NOVO HORIZONTE',
+                  '01 / A INTENÇÃO GANHA FORMA',
+                  '02 / A ARQUITETURA ENCONTRA A CIDADE',
+                ][chapter]
+              }
+            </span>
+            {chapter === 0 && (
+              <>
+                <h1>
+                  O próximo
+                  <br />
+                  <em>horizonte.</em>
+                </h1>
+                <p>
+                  Um novo ponto de vista.
+                  <br />
+                  Um novo jeito de pertencer.
+                </p>
+                <div className="hero__actions">
+                  <button
+                    className="button button--filled"
+                    onClick={() =>
+                      reduced
+                        ? document.getElementById('projeto')?.scrollIntoView()
+                        : goTo(chapters[1].progress)
+                    }
+                  >
+                    Explore o projeto <ArrowUpRight size={17} />
+                  </button>
+                  <button className="text-link" onClick={() => selectRoom(0)}>
+                    Tour do apartamento <ArrowUpRight size={15} />
+                  </button>
+                </div>
+              </>
+            )}
+            {chapter === 1 && (
+              <>
+                <h2>
+                  Cada traço.
+                  <br />
+                  <em>Uma intenção.</em>
+                </h2>
+                <p>
+                  22 pavimentos. Uma torre.
+                  <br />A expressão de uma arquitetura que se eleva.
+                </p>
+              </>
+            )}
+            {chapter === 2 && (
+              <>
+                <h2>
+                  A cidade,
+                  <br />
+                  sob outra
+                  <br />
+                  <em>perspectiva.</em>
+                </h2>
+                <p>
+                  Linhas que acolhem a luz.
+                  <br />
+                  Espaços que ampliam o olhar.
+                </p>
                 <button
+                  type="button"
                   className="button button--filled"
-                  onClick={() =>
-                    reduced ? document.getElementById('projeto')?.scrollIntoView() : goTo(0.34)
-                  }
+                  onClick={() => selectRoom(0)}
                 >
-                  Explore o projeto <ArrowUpRight size={17} />
+                  Visitar apartamento <ArrowUpRight size={17} />
                 </button>
-                <button className="text-link" onClick={onContact}>
-                  Agendar visita <ArrowUpRight size={15} />
-                </button>
-              </div>
-            </>
-          )}
-          {chapter === 1 && (
-            <>
-              <h2>
-                Cada traço.
-                <br />
-                <em>Uma intenção.</em>
-              </h2>
-              <p>
-                22 pavimentos. Uma torre.
-                <br />A expressão de uma arquitetura que se eleva.
-              </p>
-            </>
-          )}
-          {chapter === 2 && (
-            <>
-              <h2>
-                A cidade,
-                <br />
-                sob outra
-                <br />
-                <em>perspectiva.</em>
-              </h2>
-              <p>
-                Linhas que acolhem a luz.
-                <br />
-                Espaços que ampliam o olhar.
-              </p>
-            </>
-          )}
-          {chapter === 3 && (
-            <>
-              <h2>
-                Por dentro,
-                <br />
-                <em>a sua essência.</em>
-              </h2>
-              <p>
-                Madeira, luz e proporção.
-                <br />O conforto está em cada escolha.
-              </p>
-              <a className="button button--filled" href="#projeto">
-                Conheça o Vertex <ArrowDown size={16} />
-              </a>
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
+        )}
         <div
           className="hero__annotation"
           style={{ opacity: chapter === 0 || chapter === 2 ? 1 : 0 }}
@@ -173,44 +208,46 @@ export default function Hero({
             <small>DESENHADOS PARA O HORIZONTE</small>
           </span>
         </div>
-        <div className="hero__bottom">
-          <button
-            className="scroll-cue"
-            onClick={() =>
-              reduced
-                ? document.getElementById('projeto')?.scrollIntoView()
-                : goTo(Math.min(1, progress + 0.22))
-            }
-          >
-            <span className="scroll-cue__icon">
-              <MoveDown size={19} />
-            </span>
-            <span>
-              ROLE PARA
-              <br />
-              <strong>VER NASCER.</strong>
-            </span>
-          </button>
-          {!reduced && (
-            <nav className="chapters" aria-label="Capítulos da experiência">
-              {chapters.map((item, index) => (
-                <button
-                  key={item.name}
-                  aria-label={`0${index + 1} ${item.name}`}
-                  onClick={() => goTo(item.progress)}
-                  aria-current={chapter === index ? 'step' : undefined}
-                  className={chapter === index ? 'is-active' : ''}
-                >
-                  <span>0{index + 1}</span>
-                  <span>{item.name}</span>
-                  <i />
-                </button>
-              ))}
-            </nav>
+        <div className={`hero__bottom ${currentRoom ? 'hero__bottom--tour' : ''}`}>
+          {currentRoom ? (
+            <TourNavigation index={roomIndex} onSelect={selectRoom} />
+          ) : (
+            <>
+              <button
+                className="scroll-cue"
+                onClick={() => (reduced ? selectRoom(0) : goTo(chapters[chapter + 1].progress))}
+              >
+                <span className="scroll-cue__icon">
+                  <MoveDown size={19} />
+                </span>
+                <span>
+                  ROLE PARA
+                  <br />
+                  <strong>VER NASCER.</strong>
+                </span>
+              </button>
+              {!reduced && (
+                <nav className="chapters" aria-label="Capítulos da experiência">
+                  {chapters.map((item, index) => (
+                    <button
+                      key={item.name}
+                      aria-label={`0${index + 1} ${item.name}`}
+                      onClick={() => goTo(item.progress)}
+                      aria-current={chapter === index ? 'step' : undefined}
+                      className={chapter === index ? 'is-active' : ''}
+                    >
+                      <span>0{index + 1}</span>
+                      <span>{item.name}</span>
+                      <i />
+                    </button>
+                  ))}
+                </nav>
+              )}
+            </>
           )}
           <button
             className="motion-control"
-            onClick={onToggleMotion}
+            onClick={toggleMotion}
             aria-pressed={reduced}
             disabled={systemReduced}
             aria-label={

@@ -16,12 +16,6 @@ export default function App() {
   const [contact, setContact] = useState<{ interest: string; purpose: string } | null>(null);
   const openContact = (interest = '', purpose = 'Agendar visita') =>
     setContact({ interest, purpose });
-  const toggleMotion = () => {
-    const hero = document.getElementById('inicio');
-    if (hero && window.scrollY < hero.offsetHeight)
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    motion.toggle();
-  };
   useEffect(() => {
     let cancelled = false;
     const hash = window.location.hash.slice(1);
@@ -60,8 +54,7 @@ export default function App() {
         <Hero
           reduced={motion.reduced}
           systemReduced={motion.systemReduced}
-          onToggleMotion={toggleMotion}
-          onContact={() => openContact()}
+          onToggleMotion={motion.toggle}
         />
         <Project />
         <Plans onContact={openContact} />

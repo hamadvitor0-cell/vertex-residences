@@ -82,7 +82,7 @@ export const gallery = [
 
 export const chapters = [
   { name: 'Origem', progress: 0 },
-  { name: 'Estrutura', progress: 0.34 },
-  { name: 'Fachada', progress: 0.68 },
-  { name: 'Interior', progress: 1 },
+  { name: 'Estrutura', progress: 0.185 },
+  { name: 'Fachada', progress: 0.368 },
+  { name: 'Interior', progress: 0.54 },
 ];

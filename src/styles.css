@@ -376,7 +376,8 @@ textarea:focus-visible {
 
 /* The scroll-driven film occupies one continuous camera shot. */
 .hero {
-  height: 600svh;
+  height: 980svh;
+  overflow-anchor: none;
   min-height: 3500px;
   background: #192124;
   color: #ede8de;
@@ -669,11 +670,99 @@ textarea:focus-visible {
     linear-gradient(90deg, #131a1bd1, #131a1b56 34%, transparent 63%),
     linear-gradient(0deg, #192124a3, transparent 24%);
 }
+.hero--reduced .hero__sticky--chapter-3 .hero__shade::after {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 140px;
+  background: linear-gradient(#192124f5 40%, transparent);
+  content: '';
+}
 .hero__sticky--chapter-3 .hero__copy {
   left: 8.3%;
 }
 .hero__sticky--chapter-3 h2 {
-  font-size: clamp(60px, 6vw, 97px);
+  font-size: clamp(55px, 5.6vw, 88px);
+}
+.hero__sticky--chapter-3 .hero__tour-copy {
+  max-width: min(31vw, 420px);
+}
+.tour-room {
+  animation: copy-in 0.45s var(--ease) both;
+}
+.tour-room .hero__chapter-label {
+  margin-bottom: 16px;
+  color: #dec5a0;
+}
+.tour-room__description {
+  max-width: 30ch;
+  margin-top: 19px;
+  color: #f0e6d6;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.hero__bottom--tour {
+  gap: 20px;
+}
+.tour-nav {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px 30px;
+}
+.tour-nav__rooms,
+.tour-nav__arrows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tour-nav button,
+.tour-nav a {
+  min-height: 44px;
+  color: #f4eddf;
+}
+.tour-nav__rooms button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-bottom: 1px solid #e8ddc46b;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.tour-nav__rooms button > span:first-child {
+  color: #dfc59a;
+  font-size: 10px;
+}
+.tour-nav__rooms button[aria-current='step'] {
+  background: #e9d9bc;
+  border-color: #e9d9bc;
+  color: #181c1a;
+}
+.tour-nav__rooms button[aria-current='step'] > span:first-child {
+  color: #695232;
+}
+.tour-nav__arrows > button:first-child,
+.tour-nav__continue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 1px solid #e8ddc46b;
+  font-size: 11px;
+  background: #171e1cc2;
+  white-space: nowrap;
+}
+.tour-nav__rooms button:hover,
+.tour-nav__arrows > :hover {
+  border-color: #f0d7ad;
+}
+.hero__bottom--tour .motion-control {
+  flex-shrink: 0;
 }
 
 .spec-strip {

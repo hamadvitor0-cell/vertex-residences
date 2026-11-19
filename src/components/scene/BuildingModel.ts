@@ -122,7 +122,7 @@ export function createBuilding(m: Materials, mobile: boolean) {
       box(facade, [15.63, 0.042, 0.071], [0, 1.217, 6.05], m.bronze);
     }
     for (const x of [-7.43, 7.43]) {
-      if (i !== INTERIOR_LEVEL || x < 0) {
+      if (i !== INTERIOR_LEVEL) {
         box(facade, [0.076, 2.48, 9.9], [x, 1.53, 0], smoke);
         for (let z = -3.86; z < 4.1; z += 1.94) {
           box(facade, [0.15, 2.52, 0.06], [x, 1.53, z], m.bronze);

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { INTERIOR_Y, range } from '../../lib/timeline.mjs';
 import { box, softBox } from './materials';
+import { furnishApartment } from './ApartmentRooms';
 import type { Materials } from './materials';
 import type { SceneAssets } from './SceneAssets';
 
@@ -47,7 +48,6 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   const ceiling = new THREE.MeshStandardMaterial({ color: '#c0b7a6', roughness: 0.92 });
   box(room, [14.8, 0.14, 10.1], [0, 2.84, -0.02], ceiling);
   box(room, [14.8, 2.52, 0.16], [0, 1.55, -4.82], m.dark, true);
-  box(room, [0.14, 2.52, 9.8], [-7.3, 1.55, 0], plaster, true);
   box(room, [6.1, 2.38, 0.14], [3.25, 1.51, -4.67], timber);
   box(room, [6.8, 2.38, 0.13], [-3.45, 1.51, -4.67], plaster);
   for (let i = 0; i < 5; i++) {
@@ -79,7 +79,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   }
   curtain(7.05, -4.26, 0.98, Math.PI / 2);
   curtain(7.05, 4.32, 1.05, Math.PI / 2);
-  curtain(-5.72, 4.71, 1.03, 0);
+  curtain(-3.68, 4.72, 0.54, 0);
   curtain(5.72, 4.71, 1.03, 0);
 
   softBox(room, [6.05, 0.044, 4.5], [2.43, 0.341, -1.15], 0.022, cloth);
@@ -111,12 +111,12 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
     room.add(shadow);
   }
   // Low, upholstered modular sofa with separate seats and shaped throw pillows.
-  softBox(room, [3.96, 0.18, 1.27], [2.25, 0.45, -3.52], 0.08, m.walnut);
-  softBox(room, [4.24, 0.31, 1.43], [2.25, 0.63, -3.51], 0.145, upholstery);
-  for (const x of [0.05, 4.45]) {
+  softBox(room, [3.96, 0.18, 1.27], [2.52, 0.45, -3.52], 0.08, m.walnut);
+  softBox(room, [4.24, 0.31, 1.43], [2.52, 0.63, -3.51], 0.145, upholstery);
+  for (const x of [0.32, 4.72]) {
     softBox(room, [0.31, 0.41, 1.45], [x, 0.85, -3.48], 0.135, upholstery);
   }
-  for (const x of [0.8, 2.25, 3.7]) {
+  for (const x of [1.07, 2.52, 3.97]) {
     softBox(room, [1.41, 0.19, 1.16], [x, 0.83, -3.38], 0.093, upholstery);
     const back = softBox(room, [1.42, 0.51, 0.33], [x, 1.06, -3.96], 0.125, upholstery);
     back.rotation.x = -0.15;
@@ -126,7 +126,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
     [1.2, 0.15, clay],
     [3.92, 0.3, olive],
   ] as const) {
-    const pillow = softBox(room, [0.48, 0.45, 0.22], [x, 1.086, -3.67], 0.105, material);
+    const pillow = softBox(room, [0.48, 0.45, 0.22], [x + 0.27, 1.086, -3.67], 0.105, material);
     pillow.rotation.set(-0.31, turn, turn);
   }
 
@@ -173,23 +173,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   plantSlot.add(pot);
   assets.model('potted-plant', plantSlot, 1.24, -0.85, pot);
 
-  // A shallow bookcase and three-dimensional wall relief give the back of the room depth.
-  box(room, [0.95, 2.4, 0.4], [-0.72, 1.52, -4.48], m.walnut);
-  box(room, [0.81, 2.13, 0.31], [-0.72, 1.65, -4.3], m.dark);
-  for (let row = 0; row < 4; row++) {
-    const y = 0.58 + row * 0.53;
-    box(room, [0.93, 0.049, 0.42], [-0.72, y, -4.44], timber);
-    box(room, [0.77, 0.014, 0.018], [-0.72, y + 0.02, -4.22], warmStrip);
-    for (let i = 0; i < 4; i++) {
-      const h = 0.19 + ((i * 3 + row) % 5) * 0.029;
-      box(
-        room,
-        [0.043, h, 0.105],
-        [-1.02 + i * 0.056 + (row % 2) * 0.31, y + 0.025 + h / 2, -4.29],
-        [plaster, olive, clay, m.stone][i],
-      );
-    }
-  }
+  // Textured wall relief behind the living-room sofa.
   box(room, [2.3, 1.07, 0.035], [2.49, 1.87, -4.55], m.walnut);
   box(room, [2.23, 1.0, 0.046], [2.49, 1.87, -4.517], travertine);
   for (let i = 0; i < 18; i++) {
@@ -204,29 +188,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
     relief.rotation.z = -0.31;
   }
 
-  const sideboard = box(room, [2.54, 0.5, 0.52], [-2.85, 0.68, -4.25], timber, true);
-  sideboard.receiveShadow = true;
-  for (const x of [-4.03, -1.67]) box(room, [0.037, 0.18, 0.39], [x, 0.41, -4.25], m.dark);
-  const vessel = new THREE.Mesh(
-    new THREE.LatheGeometry(
-      [
-        [0, 0],
-        [0.13, 0],
-        [0.18, 0.17],
-        [0.14, 0.29],
-        [0.065, 0.34],
-        [0.07, 0.44],
-        [0.048, 0.44],
-        [0.042, 0.34],
-      ].map(([x, y]) => new THREE.Vector2(x, y)),
-      36,
-    ),
-    clay,
-  );
-  vessel.position.set(-3.03, 0.94, -4.19);
-  room.add(vessel);
-
-  box(room, [12.6, 0.014, 0.021], [0, 2.759, -4.4], warmStrip);
+  box(room, [6.1, 0.014, 0.021], [3.25, 2.759, -4.4], warmStrip);
   box(room, [0.026, 0.017, 6.1], [6.73, 2.756, -0.75], warmStrip);
   for (const x of [1.15, 3.55, 5.35]) {
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.019, 24), warmStrip);
@@ -261,6 +223,8 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   const windowFill = new THREE.PointLight('#a4c6f5', 8.5, 12, 2);
   windowFill.position.set(7.35, 1.71, 0.22);
   room.add(windowFill);
+
+  furnishApartment(room, m, { timber, plaster, cloth, upholstery, travertine, glazing, warmStrip });
 
   const doors = [-1, 1].map((side) => {
     const panel = new THREE.Group();

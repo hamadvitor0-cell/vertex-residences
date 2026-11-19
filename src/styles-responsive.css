@@ -536,7 +536,7 @@
     padding: 0;
   }
   .hero {
-    height: 580svh;
+    height: 980svh;
     min-height: 3000px;
   }
   .hero__sticky {
@@ -664,10 +664,41 @@
     max-width: 90%;
   }
   .hero__sticky--chapter-3 h2 {
-    font-size: 58px;
+    font-size: clamp(39px, 10.5vw, 59px);
   }
   .hero__sticky--chapter-3 .hero__shade {
-    background: linear-gradient(0deg, #151e20fa, rgba(15, 22, 22, 0.25) 90%);
+    background: linear-gradient(0deg, #101719 3%, #11191bf0 18%, #11191b69 47%, transparent 70%);
+  }
+  .hero__sticky--chapter-3 .hero__tour-copy {
+    bottom: 146px;
+    max-width: calc(100% - 48px);
+  }
+  .tour-room .hero__chapter-label {
+    margin-bottom: 10px;
+  }
+  .tour-room__description {
+    max-width: 38ch;
+    font-size: 12px;
+    margin-top: 9px;
+  }
+  .hero__bottom--tour {
+    align-items: flex-end;
+    gap: 8px;
+    bottom: 19px;
+  }
+  .tour-nav {
+    gap: 8px;
+  }
+  .tour-nav__rooms {
+    gap: 3px;
+  }
+  .tour-nav__rooms button {
+    justify-content: center;
+    width: clamp(34px, 10vw, 44px);
+    padding-inline: 0;
+  }
+  .tour-nav__room-name {
+    display: none;
   }
   .hero__copy > .button {
     margin-top: 19px;

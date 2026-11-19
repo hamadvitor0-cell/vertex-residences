@@ -10,6 +10,7 @@ import { createLighting } from './LightingSystem';
 import { createMaterials } from './materials';
 import { disposeScene, loadSceneAssets } from './SceneAssets';
 import { range } from '../../lib/timeline.mjs';
+import { buildingProgress } from '../../lib/apartmentTour.mjs';
 
 export default function BuildingScene({
   progress,
@@ -41,6 +42,7 @@ export default function BuildingScene({
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.03;
     renderer.shadowMap.enabled = !mobile;
+    renderer.shadowMap.autoUpdate = false;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.domElement.setAttribute(
       'aria-label',
@@ -79,7 +81,7 @@ export default function BuildingScene({
     };
     let active = true;
     let frame = 0;
-    let current = reduced ? 0.69 : progress.current;
+    let current = progress.current;
     let lastTime = 0;
     let previous = -1;
     const observer = new IntersectionObserver(
@@ -99,17 +101,20 @@ export default function BuildingScene({
       const elapsed = Math.min(time - lastTime, 80);
       lastTime = time;
       if (!active || document.hidden) return;
-      const desired = reduced ? 0.69 : progress.current;
-      current = THREE.MathUtils.damp(current, desired, 10.5, elapsed / 1000);
+      const desired = progress.current;
+      current = reduced ? desired : THREE.MathUtils.damp(current, desired, 10.5, elapsed / 1000);
       if (Math.abs(desired - current) < 0.0002) current = desired;
       if (!dirty && previous === current) return;
-      materials.glow.emissiveIntensity = range(current, 0.52, 0.74) * 1.08;
-      building.update(current);
-      interior.group.visible = current > 0.49;
-      interior.update(current);
+      const exterior = buildingProgress(current);
+      // During the interior walk the models are static; reuse their shadow maps as the camera turns.
+      renderer.shadowMap.needsUpdate = dirty || exterior !== buildingProgress(previous);
+      materials.glow.emissiveIntensity = range(exterior, 0.52, 0.74) * 1.08;
+      building.update(exterior);
+      interior.group.visible = exterior > 0.49;
+      interior.update(exterior);
       updateCamera(camera, current, width, height);
-      lighting.update(current);
-      city.update(current);
+      lighting.update(exterior);
+      city.update(exterior);
       renderer.render(scene, camera);
       previous = current;
       dirty = false;

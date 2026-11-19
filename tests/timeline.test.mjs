@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { clamp, range, floorProgress, sceneState, FLOOR_COUNT } from '../src/lib/timeline.mjs';
+import { activeTourStop, buildingProgress, tourStops } from '../src/lib/apartmentTour.mjs';
+
+test('jumping directly to a room selects its description and keeps the apartment doors open', () => {
+  for (const [index, stop] of tourStops.entries()) {
+    assert.equal(activeTourStop(stop.at), index);
+    assert.equal(sceneState(buildingProgress(stop.at)).interior, 1);
+  }
+  assert.equal(activeTourStop(0.368), -1);
+  assert.equal(activeTourStop(1), tourStops.length - 1);
+});
 
 test('construction starts at the foundation and finishes before the camera approaches', () => {
   assert.equal(floorProgress(0, 0), 0);
