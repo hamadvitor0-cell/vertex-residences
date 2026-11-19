@@ -1,6 +1,38 @@
 import * as THREE from 'three';
 import { range } from '../../lib/timeline.mjs';
 
+const localLights = THREE.ShaderChunk.lights_pars_begin.replace(
+  'vec3 lVector = pointLight.position - geometryPosition;',
+  `vec3 lVector = pointLight.position - geometryPosition;
+  if (pointLight.distance > 0.0 && dot(lVector, lVector) >= pow2(pointLight.distance)) {
+    light.direction = vec3(0.0, 1.0, 0.0);
+    light.color = vec3(0.0);
+    light.visible = false;
+    return;
+  }`,
+);
+const physicalLights = THREE.ShaderChunk.lights_physical_pars_fragment.replace(
+  /void RE_Direct_Physical\([^)]*\)\s*\{/,
+  '$&\n\tif (!directLight.visible) return;',
+);
+
+export function skipInactiveLightShading(root: THREE.Object3D) {
+  const materials = new Set<THREE.MeshStandardMaterial>();
+  root.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    for (const material of [object.material].flat()) {
+      if (material instanceof THREE.MeshStandardMaterial) materials.add(material);
+    }
+  });
+  materials.forEach((material) => {
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <lights_pars_begin>', localLights)
+        .replace('#include <lights_physical_pars_fragment>', physicalLights);
+    };
+  });
+}
+
 export function createLighting(scene: THREE.Scene, mobile: boolean) {
   const hemisphere = new THREE.HemisphereLight('#c3d9ff', '#726057', 1.02);
   const key = new THREE.DirectionalLight('#ffca97', 3.43);

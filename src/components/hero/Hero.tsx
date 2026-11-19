@@ -2,15 +2,14 @@ import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 import { ArrowUpRight, MoveDown, Pause, Play } from 'lucide-react';
 import { chapters } from '../../data/project';
 import { useScrollTimeline } from '../../hooks/useScrollTimeline';
-import { activeTourStop, buildingProgress, tourStops } from '../../lib/apartmentTour.mjs';
+import { tourStops } from '../../lib/apartmentTour.mjs';
 import SceneBoundary from '../ui/SceneBoundary';
 import Logo from '../ui/Logo';
 import TourNavigation from './TourNavigation';
 
 const BuildingScene = lazy(() => import('../scene/BuildingScene'));
 
-function ArchitecturalFallback({ progress, reduced }: { progress: number; reduced: boolean }) {
-  const floors = reduced ? 22 : Math.min(22, Math.floor(progress * 45) + 1);
+function ArchitecturalFallback({ floors }: { floors: number }) {
   return (
     <div
       className="architectural-fallback"
@@ -42,19 +41,21 @@ export default function Hero({
   systemReduced: boolean;
   onToggleMotion: () => void;
 }) {
-  const { section, progressRef, progress, goTo } = useScrollTimeline(reduced);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const { section, viewport, meter, progressRef, step, floors, goTo } = useScrollTimeline(
+    reduced,
+    failed,
+  );
   const [loadingPercent, setLoadingPercent] = useState(0);
   const [reducedRoom, setReducedRoom] = useState(-1);
   const reducedProgress = useRef(chapters[2].progress);
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
   const loading = !ready && !failed;
-  const exterior = buildingProgress(progress);
-  const roomIndex = reduced ? reducedRoom : activeTourStop(progress);
+  const roomIndex = reduced ? reducedRoom : step - 3;
   const currentRoom = tourStops[roomIndex];
-  const chapter = currentRoom ? 3 : reduced || exterior < 0.21 ? 0 : exterior < 0.52 ? 1 : 2;
+  const chapter = currentRoom ? 3 : reduced ? 0 : Math.min(step, 2);
   const selectRoom = (index: number) => {
     const destination = tourStops[index]?.at ?? chapters[2].progress;
     if (reduced) {
@@ -68,7 +69,7 @@ export default function Hero({
   const toggleMotion = () => {
     if (!reduced) {
       reducedProgress.current = currentRoom?.at ?? chapters[2].progress;
-      setReducedRoom(roomIndex);
+      setReducedRoom(currentRoom ? roomIndex : -1);
     }
     onToggleMotion();
     // Wait for the hero's height to change before repositioning the viewport.
@@ -84,14 +85,14 @@ export default function Hero({
       className={`hero ${reduced ? 'hero--reduced' : ''}`}
       aria-label="A experiência Vertex"
     >
-      <div className={`hero__sticky hero__sticky--chapter-${chapter}`}>
+      <div ref={viewport} className={`hero__sticky hero__sticky--chapter-${chapter}`}>
         <div className="hero__atmosphere" />
         <div
           className="hero__scene"
           aria-hidden={loading}
           style={{ visibility: loading ? 'hidden' : 'visible' }}
         >
-          {failed && <ArchitecturalFallback progress={exterior} reduced={reduced} />}
+          {failed && <ArchitecturalFallback floors={floors} />}
           {!failed && (
             <SceneBoundary onError={onError}>
               <Suspense fallback={null}>
@@ -272,7 +273,7 @@ export default function Hero({
               <span>{reduced ? 'Movimento reduzido' : 'Reduzir movimento'}</span>
             </button>
           </div>
-          <div className="hero__progress" style={{ transform: `scaleX(${progress})` }} />
+          <div ref={meter} className="hero__progress" />
         </div>
         <div className="scene-loading" aria-hidden={!loading}>
           <div className="scene-loading__content">

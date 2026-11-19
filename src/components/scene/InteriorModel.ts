@@ -201,6 +201,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   key.position.set(3.45, 2.6, 0.79);
   key.target.position.set(2.8, 0.36, -2.23);
   key.castShadow = true;
+  key.shadow.autoUpdate = false;
   key.shadow.mapSize.setScalar(mobile ? 768 : 1536);
   key.shadow.radius = 2;
   key.shadow.bias = -0.00015;
@@ -238,14 +239,19 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   }
   batchOpaque(room);
 
+  let lastOpening = -1;
   return {
     group: room,
+    shadow: key.shadow,
     update(progress: number) {
       const opening = range(progress, 0.855, 0.943);
+      if (opening === lastOpening) return false;
+      lastOpening = opening;
       doors.forEach(({ panel, side }) => {
         panel.position.x = side * (1.68 + opening * 3.25);
         panel.position.z = side === -1 ? 0.075 : 0;
       });
+      return true;
     },
   };
 }

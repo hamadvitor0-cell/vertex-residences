@@ -715,6 +715,7 @@ textarea:focus-visible {
   opacity: 0.6;
 }
 .hero__progress {
+  transform: scaleX(0);
   position: absolute;
   height: 2px;
   background: var(--gold);

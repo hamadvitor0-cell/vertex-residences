@@ -57,6 +57,17 @@ export function activeTourStop(progress) {
   return tourStops.findLastIndex((stop) => progress >= stop.start);
 }
 
+export function activeTourStep(progress) {
+  const room = activeTourStop(progress);
+  if (room >= 0) return room + 3;
+  const exterior = buildingProgress(progress);
+  return exterior < 0.21 ? 0 : exterior < 0.52 ? 1 : 2;
+}
+
+export function visibleTowerFloors(progress) {
+  return Math.min(22, Math.floor(buildingProgress(progress) * 45) + 1);
+}
+
 // Coordinates in the apartment's X/Z plane. Both the walls and camera use these door centers.
 export const PARTITION_X = -2.95;
 export const HALL_X = -2.19;

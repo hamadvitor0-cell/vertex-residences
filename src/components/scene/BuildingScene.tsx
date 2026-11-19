@@ -11,7 +11,7 @@ import { createCity } from './CityEnvironment';
 import { createStreet } from './StreetScene';
 import { createSceneRenderer } from './SceneRenderer';
 import { updateCamera } from './CameraController';
-import { createLighting } from './LightingSystem';
+import { createLighting, skipInactiveLightShading } from './LightingSystem';
 import { createMaterials } from './materials';
 import { disposeScene, loadSceneAssets } from './SceneAssets';
 import { range } from '../../lib/timeline.mjs';
@@ -50,7 +50,7 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
     antialias: true,
     powerPreference: 'high-performance',
   });
-  const mobile = matchMedia('(max-width: 767px)').matches;
+  const mobile = matchMedia('(max-width: 767px), (pointer: coarse) and (hover: none)').matches;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.03;
@@ -70,6 +70,7 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
   const assets = loadSceneAssets();
   const sky = assets.track(loadSky(abort.signal).catch(() => undefined));
   const scene = new THREE.Scene();
+  scene.matrixWorldAutoUpdate = false;
   scene.fog = new THREE.FogExp2('#536370', 0.00165);
   const camera = new THREE.PerspectiveCamera(39, 1, 0.1, 760);
   const materials = createMaterials();
@@ -98,11 +99,15 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
   let previousExterior = Number.NaN;
   let lastTime = 0;
   let slowFrames = 0;
-  let qualityReduced = false;
+  let lowestResolution = false;
+  let lastResolutionChange = -Infinity;
 
-  const resize = () => {
-    width = Math.max(mount.clientWidth, 8);
-    height = Math.max(mount.clientHeight, 8);
+  const resize = (force = false) => {
+    const nextWidth = Math.max(mount.clientWidth, 8);
+    const nextHeight = Math.max(mount.clientHeight, 8);
+    if (!force && nextWidth === width && nextHeight === height) return;
+    width = nextWidth;
+    height = nextHeight;
     view.resize(width, height, !ready);
     dirty = true;
   };
@@ -114,20 +119,27 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
     { rootMargin: '100px' },
   );
   observer.observe(mount);
-  const resizeObserver = new ResizeObserver(resize);
+  const resizeObserver = new ResizeObserver(() => resize());
   resizeObserver.observe(mount);
   resize();
 
   function placeCamera(value: number) {
     const exterior = buildingProgress(value);
-    const changesOutside = exterior !== previousExterior;
-    renderer.shadowMap.needsUpdate = changesOutside;
-    if (changesOutside) {
+    if (exterior !== previousExterior) {
       materials.glow.emissiveIntensity = range(exterior, 0.52, 0.74) * 1.08;
-      building.update(exterior);
-      street.update(exterior);
+      const buildingMoved = building.update(exterior);
+      if (buildingMoved) street.update(exterior);
+      const doorsMoved = interior.update(exterior);
+      const wasInteriorVisible = interior.group.visible;
       interior.group.visible = exterior > 0.49;
-      interior.update(exterior);
+      if (buildingMoved || doorsMoved) scene.updateMatrixWorld();
+
+      // The apartment spotlight is fixed and the sliding panels don't cast shadows.
+      // Refresh once when its surroundings have finished rising.
+      const roomShadowChanged =
+        interior.group.visible && (!wasInteriorVisible || (buildingMoved && exterior >= 0.64));
+      interior.shadow.needsUpdate = roomShadowChanged;
+      renderer.shadowMap.needsUpdate = roomShadowChanged || (!mobile && buildingMoved);
       lighting.update(exterior);
       city.update(exterior);
     }
@@ -153,11 +165,12 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
       return;
     }
 
-    if (!qualityReduced && !dirty && duration > 38) {
+    if (!lowestResolution && !dirty && duration > (mobile ? 33 : 38)) {
       slowFrames++;
-      if (slowFrames >= 5) {
-        view.reduceEffects();
-        qualityReduced = true;
+      if (slowFrames >= (mobile ? 8 : 5) && time - lastResolutionChange > 700) {
+        lowestResolution = view.reduceResolution();
+        lastResolutionChange = time;
+        slowFrames = 0;
       }
     } else {
       slowFrames = Math.max(0, slowFrames - 1);
@@ -200,6 +213,7 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
     await assets.ready((fraction) => onProgress(13 + Math.floor(61 * fraction)));
     const panorama = await sky;
     if (disposed) return;
+    if (mobile) skipInactiveLightShading(scene);
     if (panorama) {
       environment = pmrem.fromEquirectangular(panorama);
       scene.environmentRotation.y = Math.PI * 0.26;
@@ -226,7 +240,7 @@ function initScene(mount: HTMLDivElement, playback: RefObject<Playback>, events:
     if (disposed) return;
 
     ready = true;
-    resize();
+    resize(true);
     current = playback.current.progress.current;
     view.render(placeCamera(current));
     await waitForFirstFrame();

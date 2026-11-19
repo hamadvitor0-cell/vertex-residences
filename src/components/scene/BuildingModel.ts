@@ -250,9 +250,14 @@ export function createBuilding(m: Materials, mobile: boolean) {
     }
   group.add(outline);
 
+  let construction = -1;
   return {
     group,
     update(progress: number) {
+      lightCurtain.emissiveIntensity = m.glow.emissiveIntensity * 0.58;
+      const next = Math.min(progress, 0.64);
+      if (next === construction) return false;
+      construction = next;
       for (let i = 0; i < FLOOR_COUNT; i++) {
         const { frame, facade } = floors[i];
         const amount = floorProgress(progress, i);
@@ -269,7 +274,7 @@ export function createBuilding(m: Materials, mobile: boolean) {
       wireMaterial.opacity =
         (0.09 + range(progress, 0.045, 0.22) * 0.21) * (1 - range(progress, 0.32, 0.54));
       outline.visible = progress < 0.54;
-      lightCurtain.emissiveIntensity = m.glow.emissiveIntensity * 0.58;
+      return true;
     },
   };
 }

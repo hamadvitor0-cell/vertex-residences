@@ -7,6 +7,7 @@ import {
   LIVING_RUG,
   PARTITION_X,
   activeTourStop,
+  activeTourStep,
   bedrooms,
   buildingProgress,
   tourStops,
@@ -15,10 +16,26 @@ import {
 test('jumping directly to a room selects its description and keeps the apartment doors open', () => {
   for (const [index, stop] of tourStops.entries()) {
     assert.equal(activeTourStop(stop.at), index);
+    assert.equal(activeTourStep(stop.at), 3 + index);
     assert.equal(sceneState(buildingProgress(stop.at)).interior, 1);
   }
   assert.equal(activeTourStop(0.368), -1);
   assert.equal(activeTourStop(1), tourStops.length - 1);
+});
+
+test('the scroll steps keep the exterior chapter boundaries in either direction', () => {
+  const stages = [
+    [0, 0],
+    [0.11, 0],
+    [0.12, 1],
+    [0.28, 1],
+    [0.29, 2],
+    [0.489, 2],
+    [0.49, 3],
+  ];
+  for (const [progress, step] of [...stages, ...stages.toReversed()]) {
+    assert.equal(activeTourStep(progress), step);
+  }
 });
 
 test('the living-room rug clears the bathroom wall and its baseboard', () => {

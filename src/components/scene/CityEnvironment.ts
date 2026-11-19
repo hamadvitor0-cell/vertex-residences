@@ -57,7 +57,8 @@ export function createCity(scene: THREE.Scene, mobile: boolean) {
         }`,
     }),
   );
-  sky.renderOrder = -20;
+  // Let opaque geometry write depth before drawing the procedural sky.
+  sky.renderOrder = 100;
   scene.add(sky);
 
   const ground = new THREE.Mesh(
@@ -67,6 +68,7 @@ export function createCity(scene: THREE.Scene, mobile: boolean) {
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.049;
   ground.receiveShadow = true;
+  ground.renderOrder = 90;
   scene.add(ground);
 
   const buildingMaterial = new THREE.ShaderMaterial({
@@ -143,6 +145,7 @@ export function createCity(scene: THREE.Scene, mobile: boolean) {
     }
   }
   const city = new THREE.InstancedMesh(new THREE.BoxGeometry(), buildingMaterial, massing.length);
+  city.renderOrder = 80;
   const transform = new THREE.Object3D();
   massing.forEach(([x, y, z, w, h, d], i) => {
     transform.position.set(x, y, z);
