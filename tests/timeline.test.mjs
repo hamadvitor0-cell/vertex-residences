@@ -1,7 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { clamp, range, floorProgress, sceneState, FLOOR_COUNT } from '../src/lib/timeline.mjs';
-import { activeTourStop, buildingProgress, tourStops } from '../src/lib/apartmentTour.mjs';
+import {
+  BATH_EAST_X,
+  BATH_WALL_THICKNESS,
+  LIVING_RUG,
+  PARTITION_X,
+  activeTourStop,
+  bedrooms,
+  buildingProgress,
+  tourStops,
+} from '../src/lib/apartmentTour.mjs';
 
 test('jumping directly to a room selects its description and keeps the apartment doors open', () => {
   for (const [index, stop] of tourStops.entries()) {
@@ -10,6 +19,22 @@ test('jumping directly to a room selects its description and keeps the apartment
   }
   assert.equal(activeTourStop(0.368), -1);
   assert.equal(activeTourStop(1), tourStops.length - 1);
+});
+
+test('the living-room rug clears the bathroom wall and its baseboard', () => {
+  const rugEdge = LIVING_RUG.x - LIVING_RUG.width / 2;
+  const baseboardEdge = BATH_EAST_X + BATH_WALL_THICKNESS / 2 + 0.02;
+  assert.ok(rugEdge - baseboardEdge >= 0.15);
+});
+
+test('both workstations clear the bedding and the bedroom partition', () => {
+  for (const { bedX, bedWidth, desk } of bedrooms) {
+    if (!desk) continue;
+    const beddingEdge = bedX + (bedWidth + 0.31) / 2;
+    assert.ok(desk.x - desk.width / 2 - beddingEdge >= 0.3);
+    assert.ok(PARTITION_X - 0.065 - (desk.x + desk.width / 2) >= 0.2);
+    assert.ok(desk.fromWall - desk.width / 4 >= 0.1);
+  }
 });
 
 test('construction starts at the foundation and finishes before the camera approaches', () => {

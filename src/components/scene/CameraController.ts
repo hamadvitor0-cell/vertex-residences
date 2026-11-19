@@ -19,7 +19,7 @@ const exteriorStart = new THREE.Vector3(84, 35, 111);
 const exteriorEnd = new THREE.Vector3(73, 49, 116);
 const atFacade = new THREE.Vector3(11, INTERIOR_Y + 4.2, 42);
 const beforeDoor = new THREE.Vector3(-0.24, INTERIOR_Y + 1.96, ENTRY_Z + 1.47);
-const inside = new THREE.Vector3(-0.48, INTERIOR_Y + 1.87, 3.55);
+const inside = new THREE.Vector3(0.87, INTERIOR_Y + 1.87, 3.55);
 const facadeTarget = new THREE.Vector3(0.25, INTERIOR_Y + 1.5, ENTRY_Z - 0.4);
 const livingTarget = new THREE.Vector3(3.25, INTERIOR_Y + 1.5, -2.3);
 const target = new THREE.Vector3();
@@ -39,7 +39,7 @@ const eye = 1.87;
 // Turn at the door, move along its centerline, then look across the room.
 const path: Waypoint[] = [
   [living.at, inside.x, inside.z, livingTarget.x, livingTarget.z, 1.5],
-  [0.562, 0.02, 2.68, 3.9, 1.25, 1.42],
+  [0.562, 1.05, 2.68, 3.9, 1.25, 1.42],
   [0.602, 1.2, 2.05, 4.62, 3.28, 1.35],
   [kitchen.at, 2.05, 1.72, 5.3, 3.62, 1.42],
   [0.642, 2.05, 1.72, 4.25, 3.54, 1.42],
@@ -63,8 +63,8 @@ const path: Waypoint[] = [
   [0.923, HALL_X, secondDoor, HALL_X, 2.41, 1.47],
   [0.946, HALL_X, thirdDoor, -4.42, 2.79, 1.31],
   [0.961, PARTITION_X - 0.24, thirdDoor, -5.63, 3.22, 1.31],
-  [third.at, -3.65, thirdDoor + 0.06, -5.55, 3.91, 1.24],
-  [1, -3.65, thirdDoor + 0.06, -5.55, 3.91, 1.24],
+  [third.at, -3.45, thirdDoor - 0.07, -5.12, 3.91, 1.29],
+  [1, -3.45, thirdDoor - 0.07, -5.12, 3.91, 1.29],
 ];
 
 function orientation([, x, z, lookX, lookZ, lookHeight]: Waypoint) {
@@ -87,10 +87,12 @@ function tourCamera(
   const a = path[index - 1];
   const b = path[index];
   const move = range(progress, a[0], b[0]);
+  const guestRoom = range(progress, third.start, third.at);
+  const portraitGuest = portrait ? range(progress, 0.965, third.at) : 0;
   camera.position.set(
-    THREE.MathUtils.lerp(a[1], b[1], move),
+    THREE.MathUtils.lerp(a[1], b[1], move) + portraitGuest * 0.23,
     INTERIOR_Y + eye,
-    THREE.MathUtils.lerp(a[2], b[2], move),
+    THREE.MathUtils.lerp(a[2], b[2], move) - portraitGuest * 0.52,
   );
   const from = orientation(a);
   const to = orientation(b);
@@ -105,7 +107,7 @@ function tourCamera(
         0,
       )
     : 0;
-  const yaw = from.yaw + turn * move + portraitFraming;
+  const yaw = from.yaw + turn * move + portraitFraming + portraitGuest * 0.055;
   const pitch = THREE.MathUtils.lerp(from.pitch, to.pitch, move);
   target
     .set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch))
@@ -113,7 +115,11 @@ function tourCamera(
   camera.lookAt(target);
   const insideRooms = range(progress, LIVING_PROGRESS, 0.61);
   const narrowBath = range(progress, 0.797, 0.817) * (1 - range(progress, 0.833, 0.851));
-  camera.fov = (portrait ? 58 : 55) + insideRooms * (portrait ? 7 : 4) + narrowBath * 8;
+  camera.fov =
+    (portrait ? 58 : 55) +
+    insideRooms * (portrait ? 7 : 4) +
+    narrowBath * 8 +
+    (portrait ? portraitGuest * 20 : guestRoom * 5);
   camera.setViewOffset(
     width,
     height,

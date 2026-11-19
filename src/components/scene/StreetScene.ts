@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { range } from '../../lib/timeline.mjs';
 import { box, softBox } from './materials';
 import { contactShadows } from './ContactShadows';
+import { batchOpaque } from './batchOpaque';
 import type { Materials } from './materials';
 import type { SceneAssets } from './SceneAssets';
 
@@ -96,6 +97,7 @@ function vehicle(m: Materials, color: string) {
   }
   softBox(car, [1.1, 0.14, 0.078], [0, 0.67, 2.155], 0.037, m.dark);
   softBox(car, [1.2, 0.071, 0.092], [0, 0.53, -2.147], 0.028, m.dark);
+  batchOpaque(car);
   return car;
 }
 
@@ -302,6 +304,7 @@ export function createStreet(m: Materials, assets: SceneAssets, mobile: boolean)
   westbound.rotation.y = -Math.PI / 2;
   eastbound.rotation.y = Math.PI / 2;
   street.add(westbound, eastbound);
+  batchOpaque(street);
   return {
     group: street,
     update(progress: number) {

@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { LIVING_RUG } from '../../lib/apartmentTour.mjs';
 import { INTERIOR_Y, range } from '../../lib/timeline.mjs';
 import { box, softBox } from './materials';
 import { furnishApartment } from './ApartmentRooms';
 import { contactShadows } from './ContactShadows';
+import { batchOpaque } from './batchOpaque';
 import type { Materials } from './materials';
 import type { SceneAssets } from './SceneAssets';
 
@@ -86,7 +88,8 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   curtain(-3.68, 4.72, 0.54, 0);
   curtain(5.72, 4.71, 1.03, 0);
 
-  softBox(room, [6.05, 0.044, 4.5], [2.43, 0.341, -1.15], 0.022, cloth);
+  const rug = LIVING_RUG;
+  softBox(room, [rug.width, 0.044, rug.depth], [rug.x, 0.341, rug.z], 0.022, cloth);
   const shade = contactShadows();
   shade(room, [2.52, 0.366, -3.29, 4.92, 1.97]);
   shade(room, [2.62, 0.366, -1.19, 1.98, 1.19]);
@@ -213,6 +216,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
     m,
     { timber, plaster, cloth, upholstery, travertine, glazing, warmStrip },
     shade,
+    assets,
   );
 
   const doors = [-1, 1].map((side) => {
@@ -232,6 +236,7 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
     box(room, [4.55, 0.94, 0.025], [x, 0.78, 6.03], glazing);
     box(room, [4.59, 0.046, 0.076], [x, 1.25, 6.03], m.bronze);
   }
+  batchOpaque(room);
 
   return {
     group: room,

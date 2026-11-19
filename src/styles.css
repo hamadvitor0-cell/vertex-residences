@@ -425,6 +425,73 @@ textarea:focus-visible {
   width: 100%;
   height: 100%;
 }
+.hero__interface[aria-hidden='true'] {
+  visibility: hidden;
+}
+.scene-loading {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  color: var(--paper);
+  background: radial-gradient(ellipse at 58% 38%, #303b3a 0%, #192124 64%);
+  transition:
+    opacity 320ms ease,
+    visibility 0s linear;
+}
+.scene-loading[aria-hidden='true'] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 320ms ease,
+    visibility 0s linear 320ms;
+}
+.scene-loading__content {
+  width: min(100%, 320px);
+  display: grid;
+  justify-items: center;
+}
+.scene-loading__content .brand {
+  margin-bottom: 37px;
+}
+.scene-loading__label {
+  color: #d4c7b3;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.17em;
+}
+.scene-loading__progress {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  padding: 9px 0 16px;
+  border-bottom: 1px solid #f3f0e940;
+  position: relative;
+}
+.scene-loading__progress span {
+  font: 400 58px/1 var(--serif);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.scene-loading__progress small {
+  font-size: 24px;
+  color: var(--gold);
+  margin-left: 2px;
+}
+.scene-loading__progress i {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+  transform-origin: left;
+  transition: transform 160ms ease-out;
+}
 .architectural-fallback {
   position: absolute;
   inset: 40px 20%;

@@ -9,7 +9,9 @@ A torre, o sofá, os veículos e o cenário urbano são modelados no código. A 
 - [Potted Plant 02](https://polyhaven.com/a/potted_plant_02)
 - [Black Walnut Veneer 02](https://polyhaven.com/a/black_walnut_veneer_02), [Clay Plaster](https://polyhaven.com/a/clay_plaster), [Embedded Plank Flooring](https://polyhaven.com/a/embedded_plank_flooring) e [Poly Wool Herringbone](https://polyhaven.com/a/poly_wool_herringbone). Mapas de cor e normal redimensionados em WebP.
 - [Asphalt Floor](https://polyhaven.com/a/asphalt_floor), [Concrete Pavement 02](https://polyhaven.com/a/concrete_pavement_02) e [Concrete Tile Facade](https://polyhaven.com/a/concrete_tile_facade). Mapas PBR para o asfalto, as calçadas e as lajes.
-- [Qwantani Dusk 2 (Pure Sky)](https://polyhaven.com/a/qwantani_dusk_2_puresky). Panorama HDR de 1K integrado à cena para o céu ao entardecer e os reflexos no vidro e no metal.
+- [Qwantani Dusk 2 (Pure Sky)](https://polyhaven.com/a/qwantani_dusk_2_puresky). Panorama HDR de 1K, compactado sem perda, integrado ao céu e aos reflexos.
+- [Hanging Picture Frame 01, de James Ray Cock](https://polyhaven.com/a/hanging_picture_frame_01). Quadro dos quartos em GLB com as texturas reduzidas e o vidro removido.
+- [Office Desk, do tevy](https://tevy.dev/models/office-desk). Escrivaninha com monitor, teclado, mouse e luminária nos dois quartos. Usa o LOD1 v2, CC0, convertido para GLB com JPEG e Meshopt.
 
 [Licença CC0 dos recursos do Poly Haven](https://polyhaven.com/license).
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { batchOpaque } from './batchOpaque';
 import {
   BASE_HEIGHT,
   FLOOR_COUNT,
@@ -10,42 +10,6 @@ import {
 } from '../../lib/timeline.mjs';
 import { box, roundedSlab, softBox } from './materials';
 import type { Materials } from './materials';
-
-function batchOpaque(group: THREE.Group) {
-  const batches = new Map<THREE.Material, THREE.Mesh[]>();
-  for (const child of group.children) {
-    if (
-      !(child instanceof THREE.Mesh) ||
-      Array.isArray(child.material) ||
-      child.material.transparent ||
-      child.geometry.type === 'ExtrudeGeometry'
-    )
-      continue;
-    const batch = batches.get(child.material) ?? [];
-    batch.push(child);
-    batches.set(child.material, batch);
-  }
-  for (const [material, meshes] of batches) {
-    if (meshes.length < 2) continue;
-    const parts = meshes.map((mesh) => {
-      mesh.updateMatrix();
-      return (
-        mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone()
-      ).applyMatrix4(mesh.matrix);
-    });
-    const geometry = mergeGeometries(parts);
-    parts.forEach((part) => part.dispose());
-    if (!geometry) continue;
-    const combined = new THREE.Mesh(geometry, material);
-    combined.castShadow = meshes.some((mesh) => mesh.castShadow);
-    combined.receiveShadow = true;
-    for (const mesh of meshes) {
-      group.remove(mesh);
-      mesh.geometry.dispose();
-    }
-    group.add(combined);
-  }
-}
 
 export function createBuilding(m: Materials, mobile: boolean) {
   const group = new THREE.Group();

@@ -62,8 +62,25 @@ export const PARTITION_X = -2.95;
 export const HALL_X = -2.19;
 export const BATH_X = -1.42;
 export const BATH_DOOR_Z = -3.62;
+export const BATH_EAST_X = 0.12;
+export const BATH_WALL_THICKNESS = 0.12;
+export const LIVING_RUG = { x: 3.06, z: -1.15, width: 5.4, depth: 4.5 };
 export const bedrooms = [
-  { minZ: -4.73, maxZ: -1.52, doorZ: -3.93 },
-  { minZ: -1.52, maxZ: 1.68, doorZ: -0.77 },
-  { minZ: 1.68, maxZ: 4.87, doorZ: 2.44 },
+  { minZ: -4.73, maxZ: -1.52, doorZ: -3.93, bedX: -5.38, bedWidth: 1.79 },
+  {
+    minZ: -1.52,
+    maxZ: 1.68,
+    doorZ: -0.77,
+    bedX: -5.99,
+    bedWidth: 1.05,
+    desk: { x: -3.96, fromWall: 0.43, width: 1.29 },
+  },
+  {
+    minZ: 1.68,
+    maxZ: 4.87,
+    doorZ: 2.44,
+    bedX: -5.91,
+    bedWidth: 1.44,
+    desk: { x: -3.9, fromWall: 0.48, width: 1.34 },
+  },
 ];

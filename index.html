@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preload" href="/scene/dusk-sky-hdr.bin" as="fetch" crossorigin="anonymous" />
     <meta name="theme-color" content="#171c1e" />
     <meta
       name="description"
@@ -23,9 +24,58 @@
     <title>VERTEX RESIDENCES — Um novo ponto de vista</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div
+        class="initial-scene-loading"
+        role="progressbar"
+        aria-label="Carregando a experiência 3D"
+        aria-valuenow="0"
+        style="
+          position: fixed;
+          inset: 0;
+          display: grid;
+          place-items: center;
+          background: radial-gradient(ellipse at 58% 38%, #303b3a, #192124 64%);
+          color: #f3f0e9;
+          text-align: center;
+        "
+      >
+        <div style="width: min(75%, 320px)">
+          <div
+            style="
+              font:
+                24px Georgia,
+                serif;
+              letter-spacing: 0.3em;
+              margin-bottom: 37px;
+            "
+          >
+            VERTEX
+          </div>
+          <div style="font: 600 10px system-ui; color: #d4c7b3; letter-spacing: 0.17em">
+            CARREGANDO A EXPERIÊNCIA 3D
+          </div>
+          <div
+            style="
+              font:
+                58px/1 Georgia,
+                serif;
+              padding: 9px 0 16px;
+              border-bottom: 1px solid #f3f0e940;
+            "
+          >
+            0<small style="font-size: 24px; color: #bea078">%</small>
+          </div>
+        </div>
+      </div>
+    </div>
     <noscript
-      >VERTEX RESIDENCES. Projeto conceitual por Viham Dev: torre única com 22 pavimentos,
+      ><style>
+        .initial-scene-loading {
+          display: none !important;
+        }
+      </style>
+      VERTEX RESIDENCES. Projeto conceitual por Viham Dev: torre única com 22 pavimentos,
       apartamentos de 98 a 196 m², 2 e 3 suítes e rooftop. Ative o JavaScript para explorar a
       experiência interativa. Saiba mais sobre o desenvolvedor em https://vitorhamad.me.</noscript
     >

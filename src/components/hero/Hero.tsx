@@ -4,6 +4,7 @@ import { chapters } from '../../data/project';
 import { useScrollTimeline } from '../../hooks/useScrollTimeline';
 import { activeTourStop, buildingProgress, tourStops } from '../../lib/apartmentTour.mjs';
 import SceneBoundary from '../ui/SceneBoundary';
+import Logo from '../ui/Logo';
 import TourNavigation from './TourNavigation';
 
 const BuildingScene = lazy(() => import('../scene/BuildingScene'));
@@ -44,10 +45,12 @@ export default function Hero({
   const { section, progressRef, progress, goTo } = useScrollTimeline(reduced);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [loadingPercent, setLoadingPercent] = useState(0);
   const [reducedRoom, setReducedRoom] = useState(-1);
   const reducedProgress = useRef(chapters[2].progress);
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
+  const loading = !ready && !failed;
   const exterior = buildingProgress(progress);
   const roomIndex = reduced ? reducedRoom : activeTourStop(progress);
   const currentRoom = tourStops[roomIndex];
@@ -83,14 +86,19 @@ export default function Hero({
     >
       <div className={`hero__sticky hero__sticky--chapter-${chapter}`}>
         <div className="hero__atmosphere" />
-        <div className="hero__scene">
-          {(!ready || failed) && <ArchitecturalFallback progress={exterior} reduced={reduced} />}
+        <div
+          className="hero__scene"
+          aria-hidden={loading}
+          style={{ visibility: loading ? 'hidden' : 'visible' }}
+        >
+          {failed && <ArchitecturalFallback progress={exterior} reduced={reduced} />}
           {!failed && (
             <SceneBoundary onError={onError}>
               <Suspense fallback={null}>
                 <BuildingScene
                   progress={reduced ? reducedProgress : progressRef}
                   reduced={reduced}
+                  onProgress={setLoadingPercent}
                   onReady={onReady}
                   onError={onError}
                 />
@@ -99,170 +107,195 @@ export default function Hero({
           )}
         </div>
         <div className="hero__shade" />
-        {chapter !== 3 && (
-          <div className="hero__eyebrow">
-            <span className="status-dot" /> UMA NOVA PERSPECTIVA DE MORAR{' '}
-            <span className="hero__edition">SÃO PAULO · EDIÇÃO 01</span>
-          </div>
-        )}
-        {currentRoom ? (
-          <div className="hero__copy hero__tour-copy" aria-live="polite" aria-atomic="true">
-            <h1 className="sr-only">VERTEX RESIDENCES — Visita ao apartamento</h1>
-            <div className="tour-room" key={currentRoom.name}>
+        <div className="hero__interface" inert={loading} aria-hidden={loading}>
+          {chapter !== 3 && (
+            <div className="hero__eyebrow">
+              <span className="status-dot" /> UMA NOVA PERSPECTIVA DE MORAR{' '}
+              <span className="hero__edition">SÃO PAULO · EDIÇÃO 01</span>
+            </div>
+          )}
+          {currentRoom ? (
+            <div className="hero__copy hero__tour-copy" aria-live="polite" aria-atomic="true">
+              <h1 className="sr-only">VERTEX RESIDENCES — Visita ao apartamento</h1>
+              <div className="tour-room" key={currentRoom.name}>
+                <span className="eyebrow hero__chapter-label">
+                  {failed ? 'ROTEIRO DO APARTAMENTO' : 'TOUR DO APARTAMENTO'} ·{' '}
+                  {String(roomIndex + 1).padStart(2, '0')}/
+                  {String(tourStops.length).padStart(2, '0')}
+                </span>
+                <h2>{currentRoom.title}</h2>
+                <p className="tour-room__description">{currentRoom.description}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="hero__copy" key={chapter}>
+              {chapter > 0 && <h1 className="sr-only">VERTEX RESIDENCES — O próximo horizonte.</h1>}
               <span className="eyebrow hero__chapter-label">
-                {failed ? 'ROTEIRO DO APARTAMENTO' : 'TOUR DO APARTAMENTO'} ·{' '}
-                {String(roomIndex + 1).padStart(2, '0')}/{String(tourStops.length).padStart(2, '0')}
+                {
+                  [
+                    'DO PRIMEIRO TRAÇO A UM NOVO HORIZONTE',
+                    '01 / A INTENÇÃO GANHA FORMA',
+                    '02 / A ARQUITETURA ENCONTRA A CIDADE',
+                  ][chapter]
+                }
               </span>
-              <h2>{currentRoom.title}</h2>
-              <p className="tour-room__description">{currentRoom.description}</p>
+              {chapter === 0 && (
+                <>
+                  <h1>
+                    O próximo
+                    <br />
+                    <em>horizonte.</em>
+                  </h1>
+                  <p>
+                    Um novo ponto de vista.
+                    <br />
+                    Um novo jeito de pertencer.
+                  </p>
+                  <div className="hero__actions">
+                    <button
+                      className="button button--filled"
+                      onClick={() =>
+                        reduced
+                          ? document.getElementById('projeto')?.scrollIntoView()
+                          : goTo(chapters[1].progress)
+                      }
+                    >
+                      Explore o projeto <ArrowUpRight size={17} />
+                    </button>
+                    <button className="text-link" onClick={() => selectRoom(0)}>
+                      Tour do apartamento <ArrowUpRight size={15} />
+                    </button>
+                  </div>
+                </>
+              )}
+              {chapter === 1 && (
+                <>
+                  <h2>
+                    Cada traço.
+                    <br />
+                    <em>Uma intenção.</em>
+                  </h2>
+                  <p>
+                    22 pavimentos. Uma torre.
+                    <br />A expressão de uma arquitetura que se eleva.
+                  </p>
+                </>
+              )}
+              {chapter === 2 && (
+                <>
+                  <h2>
+                    A cidade,
+                    <br />
+                    sob outra
+                    <br />
+                    <em>perspectiva.</em>
+                  </h2>
+                  <p>
+                    Linhas que acolhem a luz.
+                    <br />
+                    Espaços que ampliam o olhar.
+                  </p>
+                  <button
+                    type="button"
+                    className="button button--filled"
+                    onClick={() => selectRoom(0)}
+                  >
+                    Visitar apartamento <ArrowUpRight size={17} />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          <div
+            className="hero__annotation"
+            style={{ opacity: chapter === 0 || chapter === 2 ? 1 : 0 }}
+            aria-hidden="true"
+          >
+            <span className="hero__annotation-line" />
+            <span>
+              22 PAVIMENTOS
+              <br />
+              <small>DESENHADOS PARA O HORIZONTE</small>
+            </span>
+          </div>
+          <div className={`hero__bottom ${currentRoom ? 'hero__bottom--tour' : ''}`}>
+            {currentRoom ? (
+              <TourNavigation index={roomIndex} onSelect={selectRoom} />
+            ) : (
+              <>
+                <button
+                  className="scroll-cue"
+                  onClick={() => (reduced ? selectRoom(0) : goTo(chapters[chapter + 1].progress))}
+                >
+                  <span className="scroll-cue__icon">
+                    <MoveDown size={19} />
+                  </span>
+                  <span>
+                    ROLE PARA
+                    <br />
+                    <strong>VER NASCER.</strong>
+                  </span>
+                </button>
+                {!reduced && (
+                  <nav className="chapters" aria-label="Capítulos da experiência">
+                    {chapters.map((item, index) => (
+                      <button
+                        key={item.name}
+                        aria-label={`0${index + 1} ${item.name}`}
+                        onClick={() => goTo(item.progress)}
+                        aria-current={chapter === index ? 'step' : undefined}
+                        className={chapter === index ? 'is-active' : ''}
+                      >
+                        <span>0{index + 1}</span>
+                        <span>{item.name}</span>
+                        <i />
+                      </button>
+                    ))}
+                  </nav>
+                )}
+              </>
+            )}
+            <button
+              className="motion-control"
+              onClick={toggleMotion}
+              aria-pressed={reduced}
+              disabled={systemReduced}
+              aria-label={
+                systemReduced
+                  ? 'Movimento reduzido conforme preferência do sistema'
+                  : reduced
+                    ? 'Ativar animações da experiência'
+                    : 'Reduzir movimentos'
+              }
+            >
+              {reduced ? <Play size={12} /> : <Pause size={12} />}
+              <span>{reduced ? 'Movimento reduzido' : 'Reduzir movimento'}</span>
+            </button>
+          </div>
+          <div className="hero__progress" style={{ transform: `scaleX(${progress})` }} />
+        </div>
+        <div className="scene-loading" aria-hidden={!loading}>
+          <div className="scene-loading__content">
+            <Logo />
+            <span className="scene-loading__label" id="scene-loading-label">
+              {loadingPercent < 75 ? 'Carregando a experiência 3D' : 'Preparando o tour 3D'}
+            </span>
+            <div
+              className="scene-loading__progress"
+              role="progressbar"
+              aria-labelledby="scene-loading-label"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={loadingPercent}
+            >
+              <span aria-hidden="true">
+                {loadingPercent}
+                <small>%</small>
+              </span>
+              <i style={{ transform: `scaleX(${loadingPercent / 100})` }} />
             </div>
           </div>
-        ) : (
-          <div className="hero__copy" key={chapter}>
-            {chapter > 0 && <h1 className="sr-only">VERTEX RESIDENCES — O próximo horizonte.</h1>}
-            <span className="eyebrow hero__chapter-label">
-              {
-                [
-                  'DO PRIMEIRO TRAÇO A UM NOVO HORIZONTE',
-                  '01 / A INTENÇÃO GANHA FORMA',
-                  '02 / A ARQUITETURA ENCONTRA A CIDADE',
-                ][chapter]
-              }
-            </span>
-            {chapter === 0 && (
-              <>
-                <h1>
-                  O próximo
-                  <br />
-                  <em>horizonte.</em>
-                </h1>
-                <p>
-                  Um novo ponto de vista.
-                  <br />
-                  Um novo jeito de pertencer.
-                </p>
-                <div className="hero__actions">
-                  <button
-                    className="button button--filled"
-                    onClick={() =>
-                      reduced
-                        ? document.getElementById('projeto')?.scrollIntoView()
-                        : goTo(chapters[1].progress)
-                    }
-                  >
-                    Explore o projeto <ArrowUpRight size={17} />
-                  </button>
-                  <button className="text-link" onClick={() => selectRoom(0)}>
-                    Tour do apartamento <ArrowUpRight size={15} />
-                  </button>
-                </div>
-              </>
-            )}
-            {chapter === 1 && (
-              <>
-                <h2>
-                  Cada traço.
-                  <br />
-                  <em>Uma intenção.</em>
-                </h2>
-                <p>
-                  22 pavimentos. Uma torre.
-                  <br />A expressão de uma arquitetura que se eleva.
-                </p>
-              </>
-            )}
-            {chapter === 2 && (
-              <>
-                <h2>
-                  A cidade,
-                  <br />
-                  sob outra
-                  <br />
-                  <em>perspectiva.</em>
-                </h2>
-                <p>
-                  Linhas que acolhem a luz.
-                  <br />
-                  Espaços que ampliam o olhar.
-                </p>
-                <button
-                  type="button"
-                  className="button button--filled"
-                  onClick={() => selectRoom(0)}
-                >
-                  Visitar apartamento <ArrowUpRight size={17} />
-                </button>
-              </>
-            )}
-          </div>
-        )}
-        <div
-          className="hero__annotation"
-          style={{ opacity: chapter === 0 || chapter === 2 ? 1 : 0 }}
-          aria-hidden="true"
-        >
-          <span className="hero__annotation-line" />
-          <span>
-            22 PAVIMENTOS
-            <br />
-            <small>DESENHADOS PARA O HORIZONTE</small>
-          </span>
         </div>
-        <div className={`hero__bottom ${currentRoom ? 'hero__bottom--tour' : ''}`}>
-          {currentRoom ? (
-            <TourNavigation index={roomIndex} onSelect={selectRoom} />
-          ) : (
-            <>
-              <button
-                className="scroll-cue"
-                onClick={() => (reduced ? selectRoom(0) : goTo(chapters[chapter + 1].progress))}
-              >
-                <span className="scroll-cue__icon">
-                  <MoveDown size={19} />
-                </span>
-                <span>
-                  ROLE PARA
-                  <br />
-                  <strong>VER NASCER.</strong>
-                </span>
-              </button>
-              {!reduced && (
-                <nav className="chapters" aria-label="Capítulos da experiência">
-                  {chapters.map((item, index) => (
-                    <button
-                      key={item.name}
-                      aria-label={`0${index + 1} ${item.name}`}
-                      onClick={() => goTo(item.progress)}
-                      aria-current={chapter === index ? 'step' : undefined}
-                      className={chapter === index ? 'is-active' : ''}
-                    >
-                      <span>0{index + 1}</span>
-                      <span>{item.name}</span>
-                      <i />
-                    </button>
-                  ))}
-                </nav>
-              )}
-            </>
-          )}
-          <button
-            className="motion-control"
-            onClick={toggleMotion}
-            aria-pressed={reduced}
-            disabled={systemReduced}
-            aria-label={
-              systemReduced
-                ? 'Movimento reduzido conforme preferência do sistema'
-                : reduced
-                  ? 'Ativar animações da experiência'
-                  : 'Reduzir movimentos'
-            }
-          >
-            {reduced ? <Play size={12} /> : <Pause size={12} />}
-            <span>{reduced ? 'Movimento reduzido' : 'Reduzir movimento'}</span>
-          </button>
-        </div>
-        <div className="hero__progress" style={{ transform: `scaleX(${progress})` }} />
         {failed && (
           <span className="sr-only">
             A maquete 3D está indisponível. A representação arquitetônica e todas as informações do

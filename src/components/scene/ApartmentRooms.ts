@@ -1,12 +1,21 @@
 import * as THREE from 'three';
-import { BATH_DOOR_Z, BATH_X, PARTITION_X, bedrooms } from '../../lib/apartmentTour.mjs';
+import {
+  BATH_DOOR_Z,
+  BATH_EAST_X,
+  BATH_WALL_THICKNESS,
+  BATH_X,
+  PARTITION_X,
+  bedrooms,
+} from '../../lib/apartmentTour.mjs';
 import { box, softBox } from './materials';
+import { batchOpaque } from './batchOpaque';
 import type { Materials } from './materials';
 import type { contactShadows } from './ContactShadows';
+import type { SceneAssets } from './SceneAssets';
 
 type Finishes = {
   timber: THREE.Material;
-  plaster: THREE.Material;
+  plaster: THREE.MeshStandardMaterial;
   cloth: THREE.Material;
   upholstery: THREE.Material;
   travertine: THREE.Material;
@@ -37,10 +46,11 @@ function quilt(width: number, length: number, overhang: number, material: THREE.
 }
 
 export function furnishApartment(
-  home: THREE.Group,
+  apartment: THREE.Group,
   m: Materials,
   f: Finishes,
   shade: ReturnType<typeof contactShadows>,
+  assets: SceneAssets,
 ) {
   const linen = new THREE.MeshStandardMaterial({ color: '#e9e1d2', roughness: 0.95 });
   const terracotta = new THREE.MeshStandardMaterial({ color: '#945643', roughness: 0.9 });
@@ -63,10 +73,17 @@ export function furnishApartment(
   function light(color: string, intensity: number, reach: number, x: number, y: number, z: number) {
     const lamp = new THREE.PointLight(color, intensity, reach);
     lamp.position.set(x, y, z);
-    home.add(lamp);
+    apartment.add(lamp);
   }
 
-  function divider(x: number, minZ: number, maxZ: number, doorZ: number, width: number) {
+  function divider(
+    home: THREE.Group,
+    x: number,
+    minZ: number,
+    maxZ: number,
+    doorZ: number,
+    width: number,
+  ) {
     for (const [a, b] of [
       [minZ, doorZ - width / 2],
       [doorZ + width / 2, maxZ],
@@ -87,9 +104,11 @@ export function furnishApartment(
   }
 
   // The three bedrooms open onto a single hall. Door gaps are shared with the camera route.
-  bedrooms.forEach(({ minZ, maxZ, doorZ }, index) => {
+  bedrooms.forEach(({ minZ, maxZ, doorZ, bedX, bedWidth: width, desk }, index) => {
+    const home = new THREE.Group();
+    apartment.add(home);
     const center = (minZ + maxZ) / 2;
-    divider(PARTITION_X, minZ, maxZ, doorZ, 1.06);
+    divider(home, PARTITION_X, minZ, maxZ, doorZ, 1.06);
     if (index > 0) box(home, [4.42, wallHeight, 0.12], [-5.13, 1.54, minZ], f.plaster, true);
 
     box(home, [0.14, 0.59, maxZ - minZ], [-7.26, 0.61, center], f.plaster, true);
@@ -107,9 +126,7 @@ export function furnishApartment(
       }
     }
 
-    const bedX = index === 0 ? -5.38 : -5.97;
     const bedZ = maxZ - 1.14;
-    const width = index === 0 ? 1.79 : index === 1 ? 1.05 : 1.44;
     const color = [terracotta, moss, blue][index];
     softBox(home, [width + 0.11, 0.27, 2.14], [bedX, 0.49, bedZ], 0.075, f.timber);
     softBox(home, [width, 0.22, 2.09], [bedX, 0.68, bedZ - 0.01], 0.098, linen);
@@ -134,7 +151,8 @@ export function furnishApartment(
     softBox(home, [width + 0.68, 0.024, 2.57], [bedX, 0.334, bedZ - 0.21], 0.012, f.cloth);
     shade(home, [bedX, 0.347, bedZ, width + 0.55, 2.6]);
 
-    const nightstands = index === 0 ? [bedX - 1.23, bedX + 1.23] : [bedX + 0.79];
+    const nightstands =
+      index === 0 ? [bedX - 1.23, bedX + 1.23] : [index === 2 ? bedX - 1.05 : bedX + 0.82];
     for (const x of nightstands) {
       softBox(home, [0.43, 0.42, 0.42], [x, 0.57, bedZ + 0.78], 0.023, f.timber);
       box(home, [0.31, 0.021, 0.016], [x, 0.62, bedZ + 0.56], m.bronze);
@@ -151,29 +169,42 @@ export function furnishApartment(
     }
     box(home, [width + 0.44, 1.14, 0.055], [bedX, 1.18, wallZ], f.timber);
     box(home, [width + 0.43, 0.017, 0.04], [bedX, 1.77, wallZ - 0.038], f.warmStrip);
-    box(home, [0.68, 0.53, 0.026], [bedX, 2.16, wallZ - 0.017], m.walnut);
-    box(home, [0.61, 0.46, 0.02], [bedX, 2.16, wallZ - 0.039], f.travertine);
-    const art = softBox(
-      home,
-      [0.28, 0.19, 0.022],
-      [bedX + 0.055, 2.16, wallZ - 0.058],
-      0.01,
-      color,
-    );
-    art.rotation.z = index * 0.33 - 0.22;
+    const picture = new THREE.Group();
+    const pictureWidth = index === 0 ? 0.53 : 0.43;
+    picture.position.set(bedX, 1.84, wallZ - 0.035);
+    home.add(picture);
+    const artPlaceholder = box(picture, [pictureWidth, 0.57, 0.025], [0, 0.285, 0], m.walnut);
+    assets.model('picture-frame', picture, pictureWidth, Math.PI, artPlaceholder);
 
-    if (index > 0) {
-      const deskX = index === 1 ? -4.15 : -4.0;
-      const deskZ = maxZ - 0.51;
-      box(home, [index === 1 ? 1.32 : 1.62, 0.062, 0.61], [deskX, 1.06, deskZ], f.timber);
-      for (const x of [deskX - 0.53, deskX + 0.53])
-        box(home, [0.044, 0.68, 0.5], [x, 0.68, deskZ], m.dark);
-      softBox(home, [0.43, 0.09, 0.39], [deskX, 0.77, deskZ - 0.55], 0.041, color);
-      box(home, [0.054, 0.43, 0.054], [deskX, 0.55, deskZ - 0.55], m.bronze);
-      const screen = box(home, [0.38, 0.24, 0.027], [deskX + 0.06, 1.25, deskZ + 0.15], m.dark);
-      screen.rotation.x = -0.13;
-      box(home, [0.19, 0.014, 0.16], [deskX + 0.06, 1.098, deskZ + 0.12], stainless);
-      box(home, [0.2, 0.033, 0.15], [deskX - 0.42, 1.105, deskZ - 0.1], color);
+    if (desk) {
+      const deskZ = maxZ - desk.fromWall;
+      const workstation = new THREE.Group();
+      workstation.position.set(desk.x, floorY, deskZ);
+      home.add(workstation);
+      const table = new THREE.Group();
+      workstation.add(table);
+      box(table, [desk.width, 0.062, 0.61], [0, 0.72, 0], f.timber);
+      for (const x of [-desk.width * 0.4, desk.width * 0.4])
+        box(table, [0.044, 0.68, 0.5], [x, 0.34, 0], m.dark);
+      box(table, [0.44, 0.25, 0.032], [0.06, 0.95, 0.14], m.dark);
+      box(table, [0.19, 0.027, 0.16], [0.06, 0.77, 0.11], stainless);
+      batchOpaque(table);
+      assets.model('office-desk', workstation, desk.width, Math.PI, table);
+
+      const chair = new THREE.Group();
+      chair.position.set(desk.x + 0.08, floorY, deskZ - 0.65);
+      chair.rotation.y = index === 2 ? 0.22 : -0.31;
+      home.add(chair);
+      softBox(chair, [0.46, 0.085, 0.43], [0, 0.46, 0], 0.04, color);
+      const backrest = softBox(chair, [0.43, 0.38, 0.078], [0, 0.722, -0.2], 0.037, color);
+      backrest.rotation.x = 0.12;
+      for (const x of [-0.177, 0.177]) {
+        box(chair, [0.025, 0.028, 0.422], [x, 0.026, -0.004], m.dark);
+        box(chair, [0.025, 0.42, 0.028], [x, 0.221, 0.18], m.dark);
+        box(chair, [0.025, 0.22, 0.028], [x, 0.51, -0.184], m.dark);
+      }
+      batchOpaque(chair);
+      shade(home, [desk.x, floorY + 0.003, deskZ - 0.3, desk.width, 1.26]);
       if (index === 1) {
         box(home, [1.38, 2.21, 0.49], [-4.07, 1.425, minZ + 0.29], f.timber);
         box(home, [0.014, 2.09, 0.021], [-4.07, 1.425, minZ + 0.543], m.dark);
@@ -187,22 +218,41 @@ export function furnishApartment(
     light('#ffe0b7', index === 0 ? 13.8 : 12.0, 4.2, -5.12, 2.35, center - 0.19);
     light('#ffb981', 4.8, 2.25, bedX - 0.19, 1.68, bedZ + 0.53);
     light('#adcbfa', 6.4, 4.15, -7.08, 1.93, center);
+    batchOpaque(home);
   });
 
   // Bath opposite the primary bedroom, with a recessed shower behind its own glass.
+  const home = new THREE.Group();
+  apartment.add(home);
   const bathEnd = -1.59;
   const bathRear = -4.74;
-  const bathEast = 0.12;
+  const bathEast = BATH_EAST_X;
   const bathCenter = (BATH_X + bathEast) / 2;
-  divider(BATH_X, bathRear, bathEnd, BATH_DOOR_Z, 1.02);
+  const hallPlaster = f.plaster.clone();
+  hallPlaster.emissive.set('#b79a76');
+  hallPlaster.emissiveIntensity = 0.18;
+  divider(home, BATH_X, bathRear, bathEnd, BATH_DOOR_Z, 1.02);
   box(
     home,
-    [0.12, wallHeight, bathEnd - bathRear],
+    [BATH_WALL_THICKNESS, wallHeight, bathEnd - bathRear],
     [bathEast, 1.54, (bathRear + bathEnd) / 2],
-    f.travertine,
+    [hallPlaster, f.travertine, hallPlaster, hallPlaster, hallPlaster, hallPlaster],
     true,
   );
-  box(home, [1.54, wallHeight, 0.12], [bathCenter, 1.54, bathEnd], f.travertine, true);
+  box(
+    home,
+    [1.54, wallHeight, 0.12],
+    [bathCenter, 1.54, bathEnd],
+    [hallPlaster, hallPlaster, hallPlaster, hallPlaster, hallPlaster, f.travertine],
+    true,
+  );
+  box(
+    home,
+    [0.018, 0.075, bathEnd - bathRear + 0.065],
+    [bathEast + 0.066, floorY + 0.036, (bathRear + bathEnd) / 2],
+    f.timber,
+  );
+  box(home, [1.554, 0.075, 0.018], [bathCenter, floorY + 0.036, bathEnd + 0.061], f.timber);
   box(
     home,
     [1.51, 0.032, bathEnd - bathRear],
@@ -264,7 +314,7 @@ export function furnishApartment(
 
   // Kitchen in the open social area beside the balcony.
   const kitchen = new THREE.Group();
-  home.add(kitchen);
+  apartment.add(kitchen);
   shade(kitchen, [4.6, 0.323, 3.49, 1.91, 2.53]);
   shade(kitchen, [6.65, 0.322, 3.72, 1.31, 2.79]);
   box(kitchen, [0.61, 0.75, 2.54], [6.72, 0.7, 3.44], f.timber);
@@ -305,4 +355,6 @@ export function furnishApartment(
     kitchen.add(pendant);
   }
   light('#ffcb95', 18.7, 4.9, 4.5, 2.3, 3.66);
+  batchOpaque(home);
+  batchOpaque(kitchen);
 }
