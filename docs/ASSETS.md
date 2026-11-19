@@ -2,12 +2,14 @@
 
 ## Cena interativa
 
-A torre, o sofá, o cenário urbano e o céu são modelados no código. A poltrona, a mesa e a planta são modelos do Poly Haven, redistribuídos em GLB com texturas reduzidas. A compressão Meshopt é aplicada à planta. Todos os arquivos são servidos pelo próprio site.
+A torre, o sofá, os veículos e o cenário urbano são modelados no código. A poltrona, a mesa e a planta são modelos do Poly Haven, redistribuídos em GLB com texturas reduzidas. A compressão Meshopt é aplicada à planta. Todos os arquivos são servidos pelo próprio site.
 
 - [Mid Century Lounge Chair](https://polyhaven.com/a/mid_century_lounge_chair)
 - [Modern Coffee Table 01](https://polyhaven.com/a/modern_coffee_table_01)
 - [Potted Plant 02](https://polyhaven.com/a/potted_plant_02)
 - [Black Walnut Veneer 02](https://polyhaven.com/a/black_walnut_veneer_02), [Clay Plaster](https://polyhaven.com/a/clay_plaster), [Embedded Plank Flooring](https://polyhaven.com/a/embedded_plank_flooring) e [Poly Wool Herringbone](https://polyhaven.com/a/poly_wool_herringbone). Mapas de cor e normal redimensionados em WebP.
+- [Asphalt Floor](https://polyhaven.com/a/asphalt_floor), [Concrete Pavement 02](https://polyhaven.com/a/concrete_pavement_02) e [Concrete Tile Facade](https://polyhaven.com/a/concrete_tile_facade). Mapas PBR para o asfalto, as calçadas e as lajes.
+- [Qwantani Dusk 2 (Pure Sky)](https://polyhaven.com/a/qwantani_dusk_2_puresky). Panorama HDR de 1K integrado à cena para o céu ao entardecer e os reflexos no vidro e no metal.
 
 [Licença CC0 dos recursos do Poly Haven](https://polyhaven.com/license).
 

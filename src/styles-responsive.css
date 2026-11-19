@@ -602,7 +602,14 @@
     width: 12px;
   }
   .hero__shade {
-    background: linear-gradient(0deg, #192124e6, transparent 20%, transparent 50%, #192124cc 95%);
+    background: linear-gradient(
+      0deg,
+      #192124e6,
+      transparent 20%,
+      transparent 40%,
+      #192124a6 65%,
+      #192124e0 100%
+    );
   }
   .hero__bottom {
     left: 24px;

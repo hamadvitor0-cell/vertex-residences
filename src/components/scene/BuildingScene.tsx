@@ -2,9 +2,13 @@ import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { createBuilding } from './BuildingModel';
 import { createInterior } from './InteriorModel';
 import { createCity } from './CityEnvironment';
+import { createStreet } from './StreetScene';
+import { createSceneRenderer } from './SceneRenderer';
 import { updateCamera } from './CameraController';
 import { createLighting } from './LightingSystem';
 import { createMaterials } from './materials';
@@ -29,7 +33,7 @@ export default function BuildingScene({
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: devicePixelRatio < 2,
+        antialias: true,
         powerPreference: 'high-performance',
       });
     } catch {
@@ -37,11 +41,10 @@ export default function BuildingScene({
       return;
     }
     const mobile = matchMedia('(max-width: 767px)').matches;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.2 : 1.65));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.03;
-    renderer.shadowMap.enabled = !mobile;
+    renderer.shadowMap.enabled = true;
     renderer.shadowMap.autoUpdate = false;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.domElement.setAttribute(
@@ -52,31 +55,61 @@ export default function BuildingScene({
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2('#526273', 0.00195);
+    scene.fog = new THREE.FogExp2('#536370', 0.00165);
     const camera = new THREE.PerspectiveCamera(39, 1, 0.1, 760);
     const materials = createMaterials();
+    RectAreaLightUniformsLib.init();
     const environment = new RoomEnvironment();
     const pmrem = new THREE.PMREMGenerator(renderer);
     const envMap = pmrem.fromScene(environment, 0.12);
     scene.environment = envMap.texture;
     environment.dispose();
-    pmrem.dispose();
     let dirty = true;
+    let disposed = false;
+    let skyTexture: THREE.DataTexture | undefined;
+    let skyReflections: THREE.WebGLRenderTarget | undefined;
     const assets = loadSceneAssets(() => {
       dirty = true;
     });
+    materials.stone.map = assets.texture('facade-stone-color', true, [0.7, 0.7]);
+    materials.stone.normalMap = assets.texture('facade-stone-normal', false, [0.7, 0.7]);
+    materials.stone.normalScale.set(0.24, 0.24);
     const lighting = createLighting(scene, mobile);
     const building = createBuilding(materials, mobile);
-    const city = createCity(scene, materials, mobile);
+    const city = createCity(scene, mobile);
+    const street = createStreet(materials, assets, mobile);
     const interior = createInterior(materials, assets, mobile);
-    scene.add(building.group, interior.group);
+    scene.add(building.group, street.group, interior.group);
+    const view = createSceneRenderer(renderer, scene, camera, mobile);
+    new HDRLoader().load(
+      '/scene/dusk-sky.hdr',
+      (texture) => {
+        if (disposed) {
+          texture.dispose();
+          return;
+        }
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        skyTexture = texture;
+        skyReflections = pmrem.fromEquirectangular(texture);
+        scene.environment = skyReflections.texture;
+        scene.environmentRotation.y = Math.PI * 0.26;
+        city.setPanorama(texture);
+        dirty = true;
+      },
+      undefined,
+      () => {
+        /* The procedural sky and studio reflections cover a missing HDRI. */
+      },
+    );
 
     let width = 1;
     let height = 1;
     const resize = () => {
       width = Math.max(mount.clientWidth, 1);
       height = Math.max(mount.clientHeight, 1);
-      renderer.setSize(width, height);
+      view.resize(width, height);
       dirty = true;
     };
     let active = true;
@@ -110,12 +143,13 @@ export default function BuildingScene({
       renderer.shadowMap.needsUpdate = dirty || exterior !== buildingProgress(previous);
       materials.glow.emissiveIntensity = range(exterior, 0.52, 0.74) * 1.08;
       building.update(exterior);
+      street.update(exterior);
       interior.group.visible = exterior > 0.49;
       interior.update(exterior);
       updateCamera(camera, current, width, height);
       lighting.update(exterior);
       city.update(exterior);
-      renderer.render(scene, camera);
+      view.render(exterior);
       previous = current;
       dirty = false;
     };
@@ -128,12 +162,17 @@ export default function BuildingScene({
     onReady();
     return () => {
       cancelAnimationFrame(frame);
+      disposed = true;
       observer.disconnect();
       resizeObserver.disconnect();
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       assets.dispose();
       disposeScene(scene);
+      view.dispose();
+      skyReflections?.dispose();
+      skyTexture?.dispose();
       envMap.dispose();
+      pmrem.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };

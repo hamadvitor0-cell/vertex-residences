@@ -444,7 +444,7 @@ textarea:focus-visible {
   pointer-events: none;
   background:
     linear-gradient(90deg, rgba(25, 33, 36, 0.75) 0%, rgba(25, 33, 36, 0.1) 51%, transparent 75%),
-    linear-gradient(0deg, rgba(25, 33, 36, 0.6), transparent 22%);
+    linear-gradient(0deg, #192124bd, transparent 22%, transparent 80%, #172127a6 100%);
 }
 .hero__eyebrow {
   position: absolute;

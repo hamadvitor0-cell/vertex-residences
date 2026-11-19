@@ -12,13 +12,16 @@ import {
 } from '../../lib/apartmentTour.mjs';
 import { ENTRY_Z } from './InteriorModel';
 
-const exteriorStart = new THREE.Vector3(91, 42, 114);
-const exteriorEnd = new THREE.Vector3(82, 51, 121);
+const streetCamera = new THREE.Vector3(25.7, 4.1, 35.5);
+const streetTarget = new THREE.Vector3(-0.7, 3.6, 2.1);
+const streetPortrait = new THREE.Vector3(29.0, 8.2, 43.0);
+const exteriorStart = new THREE.Vector3(84, 35, 111);
+const exteriorEnd = new THREE.Vector3(73, 49, 116);
 const atFacade = new THREE.Vector3(11, INTERIOR_Y + 4.2, 42);
 const beforeDoor = new THREE.Vector3(-0.24, INTERIOR_Y + 1.96, ENTRY_Z + 1.47);
-const inside = new THREE.Vector3(-2.55, INTERIOR_Y + 1.87, 3.15);
+const inside = new THREE.Vector3(-0.48, INTERIOR_Y + 1.87, 3.55);
 const facadeTarget = new THREE.Vector3(0.25, INTERIOR_Y + 1.5, ENTRY_Z - 0.4);
-const livingTarget = new THREE.Vector3(2.8, INTERIOR_Y + 1.5, -2.65);
+const livingTarget = new THREE.Vector3(3.25, INTERIOR_Y + 1.5, -2.3);
 const target = new THREE.Vector3();
 
 type Waypoint = [
@@ -36,7 +39,7 @@ const eye = 1.87;
 // Turn at the door, move along its centerline, then look across the room.
 const path: Waypoint[] = [
   [living.at, inside.x, inside.z, livingTarget.x, livingTarget.z, 1.5],
-  [0.562, -1.74, 2.65, 3.9, 1.25, 1.42],
+  [0.562, 0.02, 2.68, 3.9, 1.25, 1.42],
   [0.602, 1.2, 2.05, 4.62, 3.28, 1.35],
   [kitchen.at, 2.05, 1.72, 5.3, 3.62, 1.42],
   [0.642, 2.05, 1.72, 4.25, 3.54, 1.42],
@@ -134,21 +137,29 @@ export function updateCamera(
   }
   const exterior = buildingProgress(progress);
   const { orbit, approach, interior: enter } = sceneState(exterior);
-  const build = range(exterior, 0.02, 0.6);
+  const build = range(exterior, 0.19, 0.6);
+  const rise = range(exterior, 0.015, 0.28);
   camera.position.copy(exteriorStart).lerp(exteriorEnd, build);
-  if (portrait) camera.position.multiplyScalar(1.48);
+  if (portrait) camera.position.multiplyScalar(1.53);
+  camera.position.lerp(portrait ? streetPortrait : streetCamera, 1 - rise);
   camera.position.lerp(atFacade, orbit).lerp(beforeDoor, approach);
   // Cross the center of the threshold before moving sideways for the reveal.
   camera.position.z = THREE.MathUtils.lerp(camera.position.z, inside.z, enter);
   camera.position.y = THREE.MathUtils.lerp(camera.position.y, inside.y, enter);
   camera.position.x = THREE.MathUtils.lerp(camera.position.x, inside.x, range(enter, 0.32, 1));
-  target.set(0, 28 + build * 5, 0);
+  target.set(0, 25 + build * 10, 0).lerp(streetTarget, 1 - rise);
   target.lerp(facadeTarget, orbit);
   target.lerp(livingTarget, range(exterior, 0.921, 0.993));
   camera.lookAt(target);
-  camera.fov = 39 + range(exterior, 0.87, 1) * (portrait ? 19 : 16);
+  camera.fov =
+    39 +
+    (1 - rise) * (portrait ? 14 : 6) +
+    range(exterior, 0.34, 0.63) * (1 - range(exterior, 0.72, 0.88)) * 2.5 +
+    range(exterior, 0.87, 1) * (portrait ? 19 : 16);
   const centered = range(exterior, 0.73, 0.91);
-  const horizontal = -(portrait ? 0.115 : 0.23) * (1 - centered) - (portrait ? 0 : 0.11) * enter;
-  const vertical = -(portrait ? 0.175 : 0) * (1 - centered) + (portrait ? 0.14 : 0) * enter;
+  const horizontal = -(portrait ? 0.09 : 0.21) * (1 - centered) - (portrait ? 0 : 0.11) * enter;
+  const vertical =
+    -(portrait ? 0.165 + (1 - rise) * 0.07 : 0.035 * (1 - rise)) * (1 - centered) +
+    (portrait ? 0.14 : 0) * enter;
   camera.setViewOffset(width, height, horizontal * width, vertical * height, width, height);
 }

@@ -3,15 +3,16 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 
 export function createMaterials() {
   return {
-    stone: new THREE.MeshStandardMaterial({ color: '#a39580', roughness: 0.64 }),
+    stone: new THREE.MeshStandardMaterial({ color: '#c3b5a0', roughness: 0.68 }),
     dark: new THREE.MeshStandardMaterial({ color: '#20282a', roughness: 0.55, metalness: 0.24 }),
     bronze: new THREE.MeshStandardMaterial({ color: '#8d623d', roughness: 0.31, metalness: 0.73 }),
     facade: new THREE.MeshPhysicalMaterial({
-      color: '#263e4a',
-      metalness: 0.49,
-      roughness: 0.19,
-      clearcoat: 0.75,
-      envMapIntensity: 1.2,
+      color: '#263641',
+      metalness: 0.62,
+      roughness: 0.18,
+      clearcoat: 0.83,
+      clearcoatRoughness: 0.13,
+      envMapIntensity: 1.6,
     }),
     glass: new THREE.MeshPhysicalMaterial({
       color: '#7c99a0',

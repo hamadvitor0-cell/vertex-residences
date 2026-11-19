@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { INTERIOR_Y, range } from '../../lib/timeline.mjs';
 import { box, softBox } from './materials';
 import { furnishApartment } from './ApartmentRooms';
+import { contactShadows } from './ContactShadows';
 import type { Materials } from './materials';
 import type { SceneAssets } from './SceneAssets';
 
@@ -41,11 +42,14 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   });
   const glazing = m.glass.clone();
   glazing.side = THREE.DoubleSide;
-  glazing.opacity = 0.12;
+  glazing.opacity = 0.115;
+  glazing.roughness = 0.23;
+  glazing.clearcoat = 0.14;
+  glazing.specularIntensity = 0.6;
 
   box(room, [14.7, 0.08, 9.9], [0, floorY - 0.04, 0], floor);
   box(room, [14.7, 0.11, 1.2], [0, floorY - 0.03, 5.55], travertine);
-  const ceiling = new THREE.MeshStandardMaterial({ color: '#c0b7a6', roughness: 0.92 });
+  const ceiling = new THREE.MeshStandardMaterial({ color: '#b1aa9c', roughness: 0.95 });
   box(room, [14.8, 0.14, 10.1], [0, 2.84, -0.02], ceiling);
   box(room, [14.8, 2.52, 0.16], [0, 1.55, -4.82], m.dark, true);
   box(room, [6.1, 2.38, 0.14], [3.25, 1.51, -4.67], timber);
@@ -83,33 +87,11 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   curtain(5.72, 4.71, 1.03, 0);
 
   softBox(room, [6.05, 0.044, 4.5], [2.43, 0.341, -1.15], 0.022, cloth);
-  const contact = document.createElement('canvas');
-  contact.width = contact.height = 64;
-  const context = contact.getContext('2d')!;
-  const falloff = context.createRadialGradient(32, 32, 3, 32, 32, 31);
-  falloff.addColorStop(0, 'rgba(38, 27, 20, .73)');
-  falloff.addColorStop(0.55, 'rgba(38, 27, 20, .39)');
-  falloff.addColorStop(1, 'rgba(38, 27, 20, 0)');
-  context.fillStyle = falloff;
-  context.fillRect(0, 0, 64, 64);
-  const shadowMap = new THREE.CanvasTexture(contact);
-  shadowMap.colorSpace = THREE.SRGBColorSpace;
-  const shadowMaterial = new THREE.MeshBasicMaterial({
-    map: shadowMap,
-    transparent: true,
-    depthWrite: false,
-  });
-  for (const [x, y, z, w, d] of [
-    [2.26, 0.366, -3.29, 4.86, 1.98],
-    [2.62, 0.366, -1.19, 1.98, 1.19],
-    [5.03, 0.366, -0.06, 1.43, 1.21],
-    [6.12, 0.322, -3.98, 1.12, 1.07],
-  ]) {
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(w, d), shadowMaterial);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.set(x, y, z);
-    room.add(shadow);
-  }
+  const shade = contactShadows();
+  shade(room, [2.52, 0.366, -3.29, 4.92, 1.97]);
+  shade(room, [2.62, 0.366, -1.19, 1.98, 1.19]);
+  shade(room, [5.03, 0.366, -0.06, 1.43, 1.21]);
+  shade(room, [6.12, 0.322, -3.98, 1.12, 1.07]);
   // Low, upholstered modular sofa with separate seats and shaped throw pillows.
   softBox(room, [3.96, 0.18, 1.27], [2.52, 0.45, -3.52], 0.08, m.walnut);
   softBox(room, [4.24, 0.31, 1.43], [2.52, 0.63, -3.51], 0.145, upholstery);
@@ -212,19 +194,26 @@ export function createInterior(m: Materials, assets: SceneAssets, mobile: boolea
   const bounce = new THREE.PointLight('#ffd1a0', 13.5, 14, 2);
   bounce.position.set(1.7, 1.98, -2.2);
   room.add(bounce);
-  const key = new THREE.SpotLight('#ffdda9', 31, 13, 0.96, 0.84, 2);
+  const key = new THREE.SpotLight('#ffe2ba', 29, 12, 0.91, 0.87, 2);
   key.position.set(3.45, 2.6, 0.79);
   key.target.position.set(2.8, 0.36, -2.23);
-  key.castShadow = !mobile;
-  key.shadow.mapSize.set(1024, 1024);
+  key.castShadow = true;
+  key.shadow.mapSize.setScalar(mobile ? 768 : 1536);
+  key.shadow.radius = 2;
   key.shadow.bias = -0.00015;
   key.shadow.normalBias = 0.022;
   room.add(key, key.target);
-  const windowFill = new THREE.PointLight('#a4c6f5', 8.5, 12, 2);
-  windowFill.position.set(7.35, 1.71, 0.22);
+  const windowFill = new THREE.RectAreaLight('#c0d8f5', 1.65, 5.4, 2.2);
+  windowFill.position.set(7.18, 1.55, -0.4);
+  windowFill.lookAt(new THREE.Vector3(1.0, 1.35, -0.4));
   room.add(windowFill);
 
-  furnishApartment(room, m, { timber, plaster, cloth, upholstery, travertine, glazing, warmStrip });
+  furnishApartment(
+    room,
+    m,
+    { timber, plaster, cloth, upholstery, travertine, glazing, warmStrip },
+    shade,
+  );
 
   const doors = [-1, 1].map((side) => {
     const panel = new THREE.Group();

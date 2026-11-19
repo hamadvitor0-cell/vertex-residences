@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { BATH_DOOR_Z, BATH_X, PARTITION_X, bedrooms } from '../../lib/apartmentTour.mjs';
 import { box, softBox } from './materials';
 import type { Materials } from './materials';
+import type { contactShadows } from './ContactShadows';
 
 type Finishes = {
   timber: THREE.Material;
@@ -16,11 +17,38 @@ type Finishes = {
 const wallHeight = 2.45;
 const floorY = 0.32;
 
-export function furnishApartment(home: THREE.Group, m: Materials, f: Finishes) {
+function quilt(width: number, length: number, overhang: number, material: THREE.Material) {
+  const shape = new THREE.PlaneGeometry(width + 0.27, length + 0.1, 36, 24);
+  shape.rotateX(-Math.PI / 2);
+  const points = shape.attributes.position;
+  for (let i = 0; i < points.count; i++) {
+    const x = points.getX(i);
+    const z = points.getZ(i);
+    const side = THREE.MathUtils.smoothstep(Math.abs(x), width * 0.43, width * 0.5 + 0.12);
+    const foot = THREE.MathUtils.smoothstep(-z, length * 0.4, length * 0.54);
+    const wrinkle = Math.sin(x * 19 + z * 3.5) * 0.014 + Math.cos(z * 13 + x * 2.1) * 0.013;
+    points.setY(i, wrinkle * (0.44 + side * 1.28) - Math.max(side, foot * 0.5) * overhang);
+    points.setX(i, x + Math.sin(z * 10 + x) * side * 0.019);
+  }
+  shape.computeVertexNormals();
+  const cloth = new THREE.Mesh(shape, material);
+  cloth.castShadow = cloth.receiveShadow = true;
+  return cloth;
+}
+
+export function furnishApartment(
+  home: THREE.Group,
+  m: Materials,
+  f: Finishes,
+  shade: ReturnType<typeof contactShadows>,
+) {
   const linen = new THREE.MeshStandardMaterial({ color: '#e9e1d2', roughness: 0.95 });
   const terracotta = new THREE.MeshStandardMaterial({ color: '#945643', roughness: 0.9 });
   const moss = new THREE.MeshStandardMaterial({ color: '#656f59', roughness: 0.89 });
   const blue = new THREE.MeshStandardMaterial({ color: '#526575', roughness: 0.88 });
+  const duvet = f.upholstery.clone();
+  duvet.side = THREE.DoubleSide;
+  for (const material of [terracotta, moss, blue]) material.side = THREE.DoubleSide;
   const ceramic = new THREE.MeshPhysicalMaterial({
     color: '#ece8e0',
     roughness: 0.26,
@@ -85,11 +113,12 @@ export function furnishApartment(home: THREE.Group, m: Materials, f: Finishes) {
     const color = [terracotta, moss, blue][index];
     softBox(home, [width + 0.11, 0.27, 2.14], [bedX, 0.49, bedZ], 0.075, f.timber);
     softBox(home, [width, 0.22, 2.09], [bedX, 0.68, bedZ - 0.01], 0.098, linen);
-    softBox(home, [width + 0.04, 0.103, 1.38], [bedX, 0.803, bedZ - 0.33], 0.049, f.upholstery);
-    softBox(home, [width + 0.035, 0.082, 0.53], [bedX, 0.879, bedZ - 0.66], 0.038, color);
-    for (let i = 0; i < 5; i++) {
-      box(home, [width - 0.08, 0.007, 0.009], [bedX, 0.921, bedZ - 0.79 + i * 0.062], f.cloth);
-    }
+    const duvetMesh = quilt(width, 1.49, 0.18, duvet);
+    duvetMesh.position.set(bedX, 0.858, bedZ - 0.27);
+    home.add(duvetMesh);
+    const throwMesh = quilt(width - 0.045, 0.46, 0.135, color);
+    throwMesh.position.set(bedX + 0.035, 0.887, bedZ - 0.63);
+    home.add(throwMesh);
     softBox(home, [width + 0.16, 0.84, 0.19], [bedX, 0.84, bedZ + 1.015], 0.088, f.upholstery);
     const pillows = index === 0 ? [-0.46, 0.46] : [0];
     for (const offset of pillows) {
@@ -103,6 +132,7 @@ export function furnishApartment(home: THREE.Group, m: Materials, f: Finishes) {
       pillow.rotation.x = -0.26;
     }
     softBox(home, [width + 0.68, 0.024, 2.57], [bedX, 0.334, bedZ - 0.21], 0.012, f.cloth);
+    shade(home, [bedX, 0.347, bedZ, width + 0.55, 2.6]);
 
     const nightstands = index === 0 ? [bedX - 1.23, bedX + 1.23] : [bedX + 0.79];
     for (const x of nightstands) {
@@ -154,8 +184,9 @@ export function furnishApartment(home: THREE.Group, m: Materials, f: Finishes) {
     } else {
       box(home, [1.15, 0.035, 0.87], [-5.38, 2.72, center], f.warmStrip);
     }
-    light('#ffddaa', index === 0 ? 21 : 17, 4.4, -5.12, 2.51, center - 0.22);
-    light('#bacff3', 5.7, 3.6, -7.08, 1.93, center);
+    light('#ffe0b7', index === 0 ? 13.8 : 12.0, 4.2, -5.12, 2.35, center - 0.19);
+    light('#ffb981', 4.8, 2.25, bedX - 0.19, 1.68, bedZ + 0.53);
+    light('#adcbfa', 6.4, 4.15, -7.08, 1.93, center);
   });
 
   // Bath opposite the primary bedroom, with a recessed shower behind its own glass.
@@ -234,6 +265,8 @@ export function furnishApartment(home: THREE.Group, m: Materials, f: Finishes) {
   // Kitchen in the open social area beside the balcony.
   const kitchen = new THREE.Group();
   home.add(kitchen);
+  shade(kitchen, [4.6, 0.323, 3.49, 1.91, 2.53]);
+  shade(kitchen, [6.65, 0.322, 3.72, 1.31, 2.79]);
   box(kitchen, [0.61, 0.75, 2.54], [6.72, 0.7, 3.44], f.timber);
   box(kitchen, [0.69, 0.075, 2.63], [6.69, 1.111, 3.44], f.travertine);
   for (const z of [2.49, 3.1, 3.73, 4.37]) {
