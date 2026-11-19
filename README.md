@@ -28,7 +28,7 @@ npm run preview
 
 - Torre procedural de 22 pavimentos em Three.js: fundação, lajes, pilares, vidros, brises, iluminação e rooftop são elementos separados.
 - Scroll reversível com câmera contínua: subida, órbita, aproximação de uma abertura real no 14º pavimento e entrada em um living modelado em 3D.
-- Final híbrido: após atravessar a abertura, o living 3D dá lugar a uma renderização de alta qualidade. O render é ilustrativo e não reproduz cada detalhe do modelo procedural.
+- A mesma cena WebGL vai da fundação ao living, com portas animadas, mobiliário glTF, materiais com relevo e cidade tridimensional visível pelas janelas. A galeria reúne as perspectivas ilustrativas do projeto.
 - Três plantas SVG selecionáveis, com navegação por setas, ampliação e interesse pré-preenchido.
 - Quatro renderizações originais em WebP, galeria com filtros e lightbox navegável por teclado.
 - Mapa artístico com pontos selecionáveis; não utiliza coordenadas ou endereços reais.

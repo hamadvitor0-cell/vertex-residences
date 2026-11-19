@@ -22,10 +22,6 @@
   .hero h1 {
     font-size: 100px;
   }
-  .hero__scene {
-    width: 82%;
-    left: 28%;
-  }
   .hero__actions {
     gap: 20px;
   }
@@ -139,14 +135,6 @@
   .hero__copy {
     left: 6%;
     max-width: 60%;
-  }
-  .hero__scene {
-    left: 25%;
-    width: 95%;
-  }
-  .hero__scene--close {
-    left: 0;
-    width: 100%;
   }
   .hero__annotation {
     display: none;
@@ -613,17 +601,6 @@
   .hero__actions .text-link svg {
     width: 12px;
   }
-  .hero__scene {
-    left: 18%;
-    width: 100%;
-    top: 33%;
-    bottom: 45px;
-  }
-  .hero__scene--close {
-    left: 0;
-    top: 0;
-    bottom: 0;
-  }
   .hero__shade {
     background: linear-gradient(0deg, #192124e6, transparent 20%, transparent 50%, #192124cc 95%);
   }
@@ -680,12 +657,6 @@
     top: 23%;
     max-width: 90%;
   }
-  .hero__sticky--chapter-1 .hero__scene,
-  .hero__sticky--chapter-2 .hero__scene {
-    top: 27%;
-    left: 12%;
-    width: 112%;
-  }
   .hero__sticky--chapter-3 .hero__copy {
     top: auto;
     bottom: 105px;
@@ -697,9 +668,6 @@
   }
   .hero__sticky--chapter-3 .hero__shade {
     background: linear-gradient(0deg, #151e20fa, rgba(15, 22, 22, 0.25) 90%);
-  }
-  .hero__interior img {
-    object-position: 62% center;
   }
   .hero__copy > .button {
     margin-top: 19px;
@@ -1423,13 +1391,6 @@
   .form-grid > label {
     font-size: 8px;
   }
-}
-/* A full-bleed canvas keeps ground and atmosphere continuous at every breakpoint. */
-.hero .hero__scene {
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 100%;
 }
 .project__text p,
 .difference p,

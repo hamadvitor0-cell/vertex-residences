@@ -412,21 +412,8 @@ textarea:focus-visible {
 }
 .hero__scene {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  left: 0;
+  inset: 0;
   z-index: -1;
-  transition:
-    left 1s var(--ease),
-    width 1s var(--ease),
-    top 1s;
-}
-.hero__scene--close {
-  width: 100%;
-  left: 0;
-  top: 0;
-  bottom: 0;
 }
 .building-canvas {
   width: 100%;
@@ -448,17 +435,6 @@ textarea:focus-visible {
   height: 100%;
   width: 100%;
   object-fit: contain;
-}
-.hero__interior {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  will-change: opacity;
-}
-.hero__interior img {
-  width: 100%;
-  height: 100%;
 }
 .hero__shade {
   position: absolute;
@@ -690,14 +666,14 @@ textarea:focus-visible {
 }
 .hero__sticky--chapter-3 .hero__shade {
   background:
-    linear-gradient(90deg, rgba(18, 23, 24, 0.7), rgba(18, 23, 24, 0.2) 65%, transparent),
-    linear-gradient(0deg, #192124a3, transparent 25%);
+    linear-gradient(90deg, #131a1bd1, #131a1b56 34%, transparent 63%),
+    linear-gradient(0deg, #192124a3, transparent 24%);
 }
 .hero__sticky--chapter-3 .hero__copy {
   left: 8.3%;
 }
 .hero__sticky--chapter-3 h2 {
-  font-size: clamp(70px, 7.5vw, 115px);
+  font-size: clamp(60px, 6vw, 97px);
 }
 
 .spec-strip {

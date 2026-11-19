@@ -1,25 +1,34 @@
 import * as THREE from 'three';
-import { sceneState } from '../../lib/timeline.mjs';
+import { range } from '../../lib/timeline.mjs';
 
 export function createLighting(scene: THREE.Scene, mobile: boolean) {
-  const hemisphere = new THREE.HemisphereLight('#d6e2e1', '#494039', 2.4);
-  scene.add(hemisphere);
-  const sun = new THREE.DirectionalLight('#ffe2bd', 4.8);
-  sun.position.set(-36, 65, 42);
-  sun.castShadow = !mobile;
-  sun.shadow.mapSize.set(1024, 1024);
-  Object.assign(sun.shadow.camera, { left: -42, right: 42, top: 85, bottom: -15, far: 170 });
-  sun.shadow.bias = -0.002;
-  scene.add(sun);
-  const rim = new THREE.DirectionalLight('#8cb5d1', 2.1);
-  rim.position.set(32, 34, -20);
-  scene.add(rim);
+  const hemisphere = new THREE.HemisphereLight('#d6e5fb', '#61504b', 1.3);
+  const key = new THREE.DirectionalLight('#ffe2bf', 3.55);
+  key.position.set(-36, 64, 42);
+  key.target.position.set(0, 30, 0);
+  key.castShadow = !mobile;
+  key.shadow.mapSize.set(1024, 1024);
+  Object.assign(key.shadow.camera, {
+    left: -27,
+    right: 27,
+    top: 48,
+    bottom: -40,
+    near: 1,
+    far: 155,
+  });
+  key.shadow.bias = -0.00022;
+  key.shadow.normalBias = 0.15;
+  const rim = new THREE.DirectionalLight('#9ababf', 1.75);
+  rim.position.set(32, 42, -26);
+  scene.add(key.target, key, rim, hemisphere);
   return {
     update(progress: number) {
-      const evening = sceneState(progress).lights;
-      sun.intensity = 4.8 - evening * 2.8;
-      hemisphere.intensity = 2.4 - evening * 0.9;
-      rim.intensity = 2.1 + evening * 0.7;
+      const dusk = range(progress, 0.38, 0.78);
+      const indoors = range(progress, 0.866, 0.962);
+      key.intensity = (3.55 - dusk * 1.78) * (1 - indoors * 0.82);
+      rim.intensity = 1.75 - dusk * 0.6 - indoors * 0.81;
+      hemisphere.intensity = 1.3 - dusk * 0.3 - indoors * 0.51;
+      scene.environmentIntensity = 0.57 + dusk * 0.13 - indoors * 0.26;
     },
   };
 }

@@ -1,5 +1,18 @@
 # Assets originais
 
+## Cena interativa
+
+A torre, o sofá, o cenário urbano e o céu são modelados no código. A poltrona, a mesa e a planta são modelos do Poly Haven, redistribuídos em GLB com texturas reduzidas. A compressão Meshopt é aplicada à planta. Todos os arquivos são servidos pelo próprio site.
+
+- [Mid Century Lounge Chair](https://polyhaven.com/a/mid_century_lounge_chair)
+- [Modern Coffee Table 01](https://polyhaven.com/a/modern_coffee_table_01)
+- [Potted Plant 02](https://polyhaven.com/a/potted_plant_02)
+- [Black Walnut Veneer 02](https://polyhaven.com/a/black_walnut_veneer_02), [Clay Plaster](https://polyhaven.com/a/clay_plaster), [Embedded Plank Flooring](https://polyhaven.com/a/embedded_plank_flooring) e [Poly Wool Herringbone](https://polyhaven.com/a/poly_wool_herringbone). Mapas de cor e normal redimensionados em WebP.
+
+[Licença CC0 dos recursos do Poly Haven](https://polyhaven.com/license).
+
+## Perspectivas da galeria
+
 Renders gerados com a ferramenta integrada `image_gen` (modo built-in), sem uso de API ou credencial externa. Arquivos finais otimizados em WebP no próprio projeto. São perspectivas conceituais e não documentam um empreendimento real.
 
 ## living

@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useState } from 'react';
 import { ArrowDown, ArrowUpRight, MoveDown, Pause, Play } from 'lucide-react';
 import { chapters } from '../../data/project';
 import { useScrollTimeline } from '../../hooks/useScrollTimeline';
-import { range } from '../../lib/timeline.mjs';
 import SceneBoundary from '../ui/SceneBoundary';
 
 const BuildingScene = lazy(() => import('../scene/BuildingScene'));
@@ -48,7 +47,6 @@ export default function Hero({
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
   const chapter = reduced ? 0 : progress < 0.21 ? 0 : progress < 0.52 ? 1 : progress < 0.89 ? 2 : 3;
-  const interiorOpacity = reduced ? 0 : range(progress, 0.971, 0.997);
   return (
     <section
       ref={section}
@@ -58,7 +56,7 @@ export default function Hero({
     >
       <div className={`hero__sticky hero__sticky--chapter-${chapter}`}>
         <div className="hero__atmosphere" />
-        <div className={`hero__scene ${progress > 0.78 && !reduced ? 'hero__scene--close' : ''}`}>
+        <div className="hero__scene">
           {(!ready || failed) && <ArchitecturalFallback progress={progress} reduced={reduced} />}
           {!failed && (
             <SceneBoundary onError={onError}>
@@ -72,9 +70,6 @@ export default function Hero({
               </Suspense>
             </SceneBoundary>
           )}
-        </div>
-        <div className="hero__interior" style={{ opacity: interiorOpacity }} aria-hidden="true">
-          <img src="/images/living.webp" alt="" fetchPriority="high" />
         </div>
         <div className="hero__shade" />
         <div className="hero__eyebrow">

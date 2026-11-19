@@ -1,23 +1,31 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 export function createMaterials() {
   return {
-    stone: new THREE.MeshStandardMaterial({ color: '#aaa397', roughness: 0.72, metalness: 0.08 }),
-    dark: new THREE.MeshStandardMaterial({ color: '#262c2d', roughness: 0.61, metalness: 0.3 }),
-    bronze: new THREE.MeshStandardMaterial({ color: '#9b7855', roughness: 0.4, metalness: 0.68 }),
+    stone: new THREE.MeshStandardMaterial({ color: '#a39580', roughness: 0.64 }),
+    dark: new THREE.MeshStandardMaterial({ color: '#20282a', roughness: 0.55, metalness: 0.24 }),
+    bronze: new THREE.MeshStandardMaterial({ color: '#8d623d', roughness: 0.31, metalness: 0.73 }),
+    facade: new THREE.MeshPhysicalMaterial({
+      color: '#263e4a',
+      metalness: 0.49,
+      roughness: 0.19,
+      clearcoat: 0.75,
+      envMapIntensity: 1.2,
+    }),
     glass: new THREE.MeshPhysicalMaterial({
-      color: '#485f60',
-      metalness: 0.58,
-      roughness: 0.13,
+      color: '#7c99a0',
+      metalness: 0.26,
+      roughness: 0.1,
       transparent: true,
-      opacity: 0.64,
-      clearcoat: 1,
-      envMapIntensity: 1.3,
-      side: THREE.DoubleSide,
+      opacity: 0.19,
+      depthWrite: false,
+      clearcoat: 0.7,
+      envMapIntensity: 1,
     }),
     glow: new THREE.MeshStandardMaterial({
-      color: '#9b7a4e',
-      emissive: '#efb86b',
+      color: '#75624c',
+      emissive: '#ffc487',
       emissiveIntensity: 0,
       roughness: 0.7,
     }),
@@ -39,13 +47,27 @@ export function box(
   parent: THREE.Object3D,
   size: [number, number, number],
   position: [number, number, number],
-  material: THREE.Material,
+  material: THREE.Material | THREE.Material[],
   castShadow = false,
 ) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
   mesh.position.set(...position);
   mesh.castShadow = castShadow;
   mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+export function softBox(
+  parent: THREE.Object3D,
+  size: [number, number, number],
+  position: [number, number, number],
+  radius: number,
+  material: THREE.Material,
+) {
+  const mesh = new THREE.Mesh(new RoundedBoxGeometry(...size, 3, radius), material);
+  mesh.position.set(...position);
+  mesh.castShadow = mesh.receiveShadow = true;
   parent.add(mesh);
   return mesh;
 }
@@ -65,8 +87,11 @@ export function roundedSlab(width: number, depth: number, height: number, radius
   shape.quadraticCurveTo(x, z, x + radius, z);
   const geometry = new THREE.ExtrudeGeometry(shape, {
     depth: height,
-    bevelEnabled: false,
-    curveSegments: 5,
+    bevelEnabled: true,
+    bevelThickness: 0.04,
+    bevelSize: 0.045,
+    bevelSegments: 2,
+    curveSegments: 8,
   });
   geometry.rotateX(-Math.PI / 2);
   return geometry;

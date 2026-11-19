@@ -1,37 +1,39 @@
 import * as THREE from 'three';
 import { INTERIOR_Y, range, sceneState } from '../../lib/timeline.mjs';
+import { ENTRY_Z } from './InteriorModel';
 
-const initial = new THREE.Vector3(83, 34, 103);
-const elevated = new THREE.Vector3(78, 51, 101);
-const facade = new THREE.Vector3(7, INTERIOR_Y + 5, 37);
-const threshold = new THREE.Vector3(0.1, INTERIOR_Y + 1.7, 7.7);
-const inside = new THREE.Vector3(0.05, INTERIOR_Y + 1.6, 3.7);
+const exteriorStart = new THREE.Vector3(91, 42, 114);
+const exteriorEnd = new THREE.Vector3(82, 51, 121);
+const atFacade = new THREE.Vector3(11, INTERIOR_Y + 4.2, 42);
+const beforeDoor = new THREE.Vector3(-0.24, INTERIOR_Y + 1.96, ENTRY_Z + 1.47);
+const inside = new THREE.Vector3(-2.55, INTERIOR_Y + 1.87, 3.15);
+const facadeTarget = new THREE.Vector3(0.25, INTERIOR_Y + 1.5, ENTRY_Z - 0.4);
+const livingTarget = new THREE.Vector3(2.8, INTERIOR_Y + 1.5, -2.65);
 const target = new THREE.Vector3();
 
-export function updateCamera(camera: THREE.PerspectiveCamera, progress: number, mobile: boolean) {
+export function updateCamera(
+  camera: THREE.PerspectiveCamera,
+  progress: number,
+  width: number,
+  height: number,
+) {
   const { orbit, approach, interior: enter } = sceneState(progress);
-  const rise = range(progress, 0.05, 0.61);
-  camera.position.copy(initial).lerp(elevated, rise);
-  if (mobile) camera.position.multiplyScalar(1.65);
-  camera.position.lerp(facade, orbit).lerp(threshold, approach).lerp(inside, enter);
-  target.set(0, 25 + rise * 8, 0);
-  target.lerp(new THREE.Vector3(0, INTERIOR_Y + 1.3, 0), orbit);
-  target.lerp(new THREE.Vector3(-0.75, INTERIOR_Y + 1.25, -3), approach);
+  const portrait = width / height < 0.85;
+  const build = range(progress, 0.02, 0.6);
+  camera.position.copy(exteriorStart).lerp(exteriorEnd, build);
+  if (portrait) camera.position.multiplyScalar(1.48);
+  camera.position.lerp(atFacade, orbit).lerp(beforeDoor, approach);
+  // Cross the center of the threshold before moving sideways for the reveal.
+  camera.position.z = THREE.MathUtils.lerp(camera.position.z, inside.z, enter);
+  camera.position.y = THREE.MathUtils.lerp(camera.position.y, inside.y, enter);
+  camera.position.x = THREE.MathUtils.lerp(camera.position.x, inside.x, range(enter, 0.32, 1));
+  target.set(0, 28 + build * 5, 0);
+  target.lerp(facadeTarget, orbit);
+  target.lerp(livingTarget, range(progress, 0.921, 0.993));
   camera.lookAt(target);
-  const width = document.documentElement.clientWidth,
-    height = window.innerHeight;
-  const close = range(progress, 0.7, 0.92);
-  camera.setViewOffset(
-    width,
-    height,
-    -(mobile ? 0.16 : 0.22) * width * (1 - close),
-    -(mobile ? 0.2 : 0) * height * (1 - close),
-    width,
-    height,
-  );
-  const fov = 43 + enter * 17;
-  if (camera.fov !== fov) {
-    camera.fov = fov;
-    camera.updateProjectionMatrix();
-  }
+  camera.fov = 39 + range(progress, 0.87, 1) * (portrait ? 19 : 16);
+  const centered = range(progress, 0.73, 0.91);
+  const horizontal = -(portrait ? 0.115 : 0.23) * (1 - centered) - (portrait ? 0 : 0.11) * enter;
+  const vertical = -(portrait ? 0.175 : 0) * (1 - centered) + (portrait ? 0.14 : 0) * enter;
+  camera.setViewOffset(width, height, horizontal * width, vertical * height, width, height);
 }
